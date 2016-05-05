@@ -2,31 +2,35 @@ package sample;
 
 
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class Main extends Application
 {
 
 	@Override
-	public void start( Stage myStage ) throws Exception
+	public void start( Stage primaryStage ) throws Exception
 	{
-		//List< String > inAL1 = new ArrayList<>();
-		//List< String > inAL2 = new ArrayList<>();
-
-		myStage.setTitle( "SNMP Link Utilization" );
+		primaryStage.setTitle( "SNMP Link Utilization" );
 
 		GridPane rootNode = new GridPane();
 		rootNode.setPadding( new Insets( 15 ) );
@@ -34,40 +38,37 @@ public class Main extends Application
 		rootNode.setVgap( 5 );
 		rootNode.setAlignment( Pos.CENTER );
 
-		Scene myScene = new Scene( rootNode, 300, 200 );
+		Scene myScene = new Scene( rootNode, 400, 300 );
 
 		rootNode.add( new Label( "First walk:" ), 0, 0 );
 		TextField firstValue = new TextField();
+		firstValue.setText( "walk1.txt" );
 		rootNode.add( firstValue, 1, 0 );
 
 		rootNode.add( new Label( "Second walk:" ), 0, 1 );
 		TextField secondValue = new TextField();
+		secondValue.setText( "walk2.txt" );
 		rootNode.add( secondValue, 1, 1 );
 
-		Button aButton = new Button( "Calculate" );
+		Button aButton = new Button( "Show Interfaces" );
 		rootNode.add( aButton, 1, 2 );
 		GridPane.setHalignment( aButton, HPos.LEFT );
 
-		TextField result = new TextField();
-		result.setEditable( false );
-		rootNode.add( result, 1, 3 );
+		ListView<String> IfListView = new ListView<>();
+		rootNode.add( IfListView, 1, 3 );
 
 		aButton.setOnAction( e -> {
-/*
-			Integer value1 = Integer.valueOf( firstValue.getText() );
-			Integer value2 = Integer.valueOf( secondValue.getText() );
-			Integer r = value1 + value2;
-			result.setText( r.toString() );
-*/
 			//result.setText( ReadFile( firstValue.getText() ) );
-			List<String> inAL1 = ReadFile( firstValue.getText() );
-			List<String> inAL2 = ReadFile( secondValue.getText() );
+			List< String > inAL1 = ReadFile( firstValue.getText() );
+			List< String > inAL2 = ReadFile( secondValue.getText() );
 			CalculateUtilization( inAL1, inAL2 );
+			ObservableList<String> data = FXCollections.observableArrayList( CalculateUtilization( inAL1, inAL2 ) );
+			IfListView.setItems( data );
 		} );
 
-		myStage.setScene( myScene );
+		primaryStage.setScene( myScene );
 
-		myStage.show();
+		primaryStage.show();
 	}
 
 
@@ -77,7 +78,7 @@ public class Main extends Application
 	}
 
 
-	private static List<String> ReadFile( String inFileName )
+	private static List< String > ReadFile( String inFileName )
 	{
 		String line;
 		List< String > inAL = new ArrayList<>();
@@ -96,8 +97,6 @@ public class Main extends Application
 					// Populate the ArrayList with each line we read in.
 					inAL.add( line );
 				}
-				// Output every element in our ArrayList.
-				inAL.forEach( System.out::println );
 				return inAL;
 			}
 		}
@@ -109,8 +108,15 @@ public class Main extends Application
 	}
 
 
-	private static double CalculateUtilization( List<String> walk1, List<String> walk2 )
+	private static List<String> CalculateUtilization( List< String > walk1, List< String > walk2 )
 	{
-		return 0.0;
+		String IfDescriptionOID = ".1.3.6.1.2.1.2.2.1.2.";          // The OID for ifDescr.
+		List< String > ifList1 = new ArrayList<>();
+		List< String > ifList2 = new ArrayList<>();
+		ifList1.addAll( walk1.stream().filter( line -> line.contains( IfDescriptionOID ) ).collect( Collectors.toList() ) );
+		ifList1.forEach( System.out::println );
+		ifList2.addAll( walk2.stream().filter( line -> line.contains( IfDescriptionOID ) ).collect( Collectors.toList() ) );
+		ifList2.forEach( System.out::println );
+		return ifList1;
 	}
 }
