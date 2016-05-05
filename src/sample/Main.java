@@ -8,10 +8,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
@@ -20,8 +17,42 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+
+/**
+ * This program will open two SNMP walk files, locate and display each interface, and allow the user to select a displayed interface.
+ * When an interface is selected, the program will calculate the utilization of that interface from the values in each walk.
+ * <p>
+ * The OIDs in the input files are expected to be in numerical format.
+ * If named identifiers are desired, please contact me, and we can discuss formatting.
+ * This means each line will begin with a dotted-decimal identifier.  Some of those identifiers are listed below.
+ * The lines will not contain tabs between tokens, but spaces.  Tabs have not been tested, but may work.
+ * Counters are currently limited to 32 bits in size.  64-bit counters may be implemented later.
+ * <p>
+ * The generic formula for utilization is: ( delta-octets * 8 * 10 ) / ( delta-seconds * ifSpeed )
+ * That formula will work for inbound, outbound, or bidirectional.  You only need to select the appropriate delta-octets.
+ * <p>
+ * More information can be found here:
+ * http://www.cisco.com/c/en/us/support/docs/ip/simple-network-management-protocol-snmp/8141-calculate-bandwidth-snmp.html
+ * <p>
+ * Here are the pertinent OIDs for this program (some, like errors and discards, are not implemented yet):
+ * SYSUPTIMEOID = ".1.3.6.1.2.1.1.3.0";			// The OID for sysUpTime (System UpTime)
+ * IFINDEXOID = ".1.3.6.1.2.1.2.2.1.1.";	    	// The OID for ifIndex (Interface Index)
+ * IFDESCROID = ".1.3.6.1.2.1.2.2.1.2.";	   	// The OID for ifDescr (Interface Description)
+ * IFSPEEDOID = ".1.3.6.1.2.1.2.2.1.5.";	     // The OID for ifSpeed (Interface Speed)
+ * IFINOCTETSOID = ".1.3.6.1.2.1.2.2.1.10.";		// The OID for ifInOctets (Interface Inbound Octet Count)
+ * IFINDISCARDSOID = ".1.3.6.1.2.1.2.2.1.13."; 	// The OID for ifInDiscards (Interface Inbound Discards)
+ * IFINERRORSOID = ".1.3.6.1.2.1.2.2.1.14.";		// The OID for ifInErrors (Interface Inbound Errors)
+ * IFOUTOCTETSOID = ".1.3.6.1.2.1.2.2.1.16.";  	// The OID for ifOutOctets (Interface Outbound Octet Count)
+ * IFOUTDISCARDSOID = ".1.3.6.1.2.1.2.2.1.19.";	// The OID for ifOutDiscards (Interface Outbound Discards)
+ * IFOUTERRORSOID = ".1.3.6.1.2.1.2.2.1.20.";     // The OID for ifOutErrors (Interface Outbound Errors)
+ * COUNTER32MAX = 4294967295;					// The maximum value a Counter32 can hold.
+ * COUNTER64MAX = 18446744073709551615;	     	// The maximum value a Counter64 can hold.
+ */
 
 
 public class Main extends Application
@@ -38,7 +69,7 @@ public class Main extends Application
 		rootNode.setVgap( 5 );
 		rootNode.setAlignment( Pos.CENTER );
 
-		Scene myScene = new Scene( rootNode, 400, 300 );
+		Scene primaryScene = new Scene( rootNode, 400, 300 );
 
 		rootNode.add( new Label( "First walk:" ), 0, 0 );
 		TextField firstValue = new TextField();
@@ -51,22 +82,33 @@ public class Main extends Application
 		rootNode.add( secondValue, 1, 1 );
 
 		Button aButton = new Button( "Show Interfaces" );
-		rootNode.add( aButton, 1, 2 );
+		rootNode.add( aButton, 0, 2 );
 		GridPane.setHalignment( aButton, HPos.LEFT );
 
-		ListView<String> IfListView = new ListView<>();
-		rootNode.add( IfListView, 1, 3 );
+		ListView< String > ifListView = new ListView<>();
+//		rootNode.add( ifListView, 0, 3 );
+
+		TableView< Map > ifTableView = new TableView<>();
+		ifTableView.setEditable( false );
+		TableColumn ifIndexCol = new TableColumn( "Index" );
+		TableColumn ifDescrCol = new TableColumn( "Description" );
+		ifDescrCol.prefWidthProperty().bind( ifTableView.widthProperty().multiply( 0.7 ) );
+		ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
+		rootNode.add( ifTableView, 0, 3 );
 
 		aButton.setOnAction( e -> {
-			//result.setText( ReadFile( firstValue.getText() ) );
+			// Read in each file and populate our ArrayLists.
 			List< String > inAL1 = ReadFile( firstValue.getText() );
 			List< String > inAL2 = ReadFile( secondValue.getText() );
-			CalculateUtilization( inAL1, inAL2 );
-			ObservableList<String> data = FXCollections.observableArrayList( CalculateUtilization( inAL1, inAL2 ) );
-			IfListView.setItems( data );
+			// ToDo: Use the output from FindInterfaces to create a collection of SNMPInterface objects that will then populate the TableView object.
+			// Find all SNMP interfaces in those SNMP walks.
+			ObservableList< Map > interfaceMap = FXCollections.observableArrayList( FindInterfaces( inAL1, inAL2 ) );
+			// Populate our ListView with content from the interfaces.
+//			ifListView.setItems( interfaceMap );
+			ifTableView.setItems( interfaceMap );
 		} );
 
-		primaryStage.setScene( myScene );
+		primaryStage.setScene( primaryScene );
 
 		primaryStage.show();
 	}
@@ -108,15 +150,34 @@ public class Main extends Application
 	}
 
 
-	private static List<String> CalculateUtilization( List< String > walk1, List< String > walk2 )
+	private static Map< Integer, String > FindInterfaces( List< String > walk1, List< String > walk2 )
 	{
-		String IfDescriptionOID = ".1.3.6.1.2.1.2.2.1.2.";          // The OID for ifDescr.
+		String IfDescriptionOID = ".1.3.6.1.2.1.2.2.1.2.";
+		Map< Integer, String > ifListMap = new HashMap<>();
 		List< String > ifList1 = new ArrayList<>();
 		List< String > ifList2 = new ArrayList<>();
 		ifList1.addAll( walk1.stream().filter( line -> line.contains( IfDescriptionOID ) ).collect( Collectors.toList() ) );
-		ifList1.forEach( System.out::println );
 		ifList2.addAll( walk2.stream().filter( line -> line.contains( IfDescriptionOID ) ).collect( Collectors.toList() ) );
-		ifList2.forEach( System.out::println );
-		return ifList1;
+
+		if( ifList1.equals( ifList2 ) )
+		{
+			// Populate our map.
+			ifList1.stream().filter( line -> line.startsWith( IfDescriptionOID ) ).forEach( line -> {
+				// The interface index will start at position 21 and end one position before the first equal sign.
+				// There may be rare cases where an OID will contain more than one equal sign.
+				int ifIndex = Integer.parseInt( line.substring( 21, line.indexOf( " = " ) ) );
+				// The interface description will start after the equal sign, and go to the end of the line.
+				String ifDescr = line.substring( line.indexOf( " = " ) + 11 );
+				ifListMap.put( ifIndex, ifDescr );
+			} );
+			// Output the contents of our map.
+			ifListMap.forEach( ( k, v ) -> System.out.println( k + " " + v ) );
+			return ifListMap;
+		}
+		else
+		{
+			System.out.println( "The SNMP walks appear to be from different machines.  This will prevent any calculations." );
+			return null;
+		}
 	}
 }
