@@ -1,11 +1,11 @@
-package sample;
+package com.adamjhowell.snmpinterface;
 
 
 /**
  * Created by Adam Howell
  * on 2016-05-05.
  */
-public class SNMPInterface
+class SNMPInterface
 {
 	private String ifDescr;
 	private int ifIndex;
@@ -18,9 +18,9 @@ public class SNMPInterface
 	private int ifOutErrors;
 
 
-	void SNMPInterface( String _ifDescr, int ifIndex, int ifSpeed, int ifInOctets, int ifInDiscards, int ifInErrors, int ifOutOctets, int ifOutDiscards, int ifOutErrors )
+	SNMPInterface( String ifDescr, int ifIndex, int ifSpeed, int ifInOctets, int ifInDiscards, int ifInErrors, int ifOutOctets, int ifOutDiscards, int ifOutErrors )
 	{
-		this.ifDescr = _ifDescr;
+		this.ifDescr = ifDescr;
 		this.ifIndex = ifIndex;
 		this.ifSpeed = ifSpeed;
 		this.ifInOctets = ifInOctets;
@@ -29,5 +29,12 @@ public class SNMPInterface
 		this.ifOutOctets = ifOutOctets;
 		this.ifOutDiscards = ifOutDiscards;
 		this.ifOutErrors = ifOutErrors;
+	}
+
+
+	SNMPInterface( String ifDescr, int ifIndex )
+	{
+		this.ifDescr = ifDescr;
+		this.ifIndex = ifIndex;
 	}
 }

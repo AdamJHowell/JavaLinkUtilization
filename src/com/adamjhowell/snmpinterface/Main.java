@@ -1,7 +1,8 @@
-package sample;
+package com.adamjhowell.snmpinterface;
 
 
 import javafx.application.Application;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
@@ -9,6 +10,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
@@ -17,9 +19,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -52,11 +52,23 @@ import java.util.stream.Collectors;
  * IFOUTERRORSOID = ".1.3.6.1.2.1.2.2.1.20.";     // The OID for ifOutErrors (Interface Outbound Errors)
  * COUNTER32MAX = 4294967295;					// The maximum value a Counter32 can hold.
  * COUNTER64MAX = 18446744073709551615;	     	// The maximum value a Counter64 can hold.
+ * <p>
+ * I will commonly use 'if' in my variable names to indicate the symbol refers to a SNMP Interface.
  */
 
 
 public class Main extends Application
 {
+	private TableView< Person > table = new TableView< Person >();
+	private final ObservableList< Person > data =
+		FXCollections.observableArrayList(
+			new Person( "Jacob", "Smith", "jacob.smith@example.com" ),
+			new Person( "Isabella", "Johnson", "isabella.johnson@example.com" ),
+			new Person( "Ethan", "Williams", "ethan.williams@example.com" ),
+			new Person( "Emma", "Jones", "emma.jones@example.com" ),
+			new Person( "Michael", "Brown", "michael.brown@example.com" )
+		);
+
 
 	@Override
 	public void start( Stage primaryStage ) throws Exception
@@ -71,12 +83,12 @@ public class Main extends Application
 
 		Scene primaryScene = new Scene( rootNode, 400, 300 );
 
-		rootNode.add( new Label( "First walk:" ), 0, 0 );
+		rootNode.add( new Label( "First walk file:" ), 0, 0 );
 		TextField firstValue = new TextField();
 		firstValue.setText( "walk1.txt" );
 		rootNode.add( firstValue, 1, 0 );
 
-		rootNode.add( new Label( "Second walk:" ), 0, 1 );
+		rootNode.add( new Label( "Second walk file:" ), 0, 1 );
 		TextField secondValue = new TextField();
 		secondValue.setText( "walk2.txt" );
 		rootNode.add( secondValue, 1, 1 );
@@ -85,16 +97,36 @@ public class Main extends Application
 		rootNode.add( aButton, 0, 2 );
 		GridPane.setHalignment( aButton, HPos.LEFT );
 
-		ListView< String > ifListView = new ListView<>();
+//		ListView< String > ifListView = new ListView<>();
 //		rootNode.add( ifListView, 0, 3 );
 
-		TableView< Map > ifTableView = new TableView<>();
+		table.setEditable( true );
+		TableColumn firstNameCol = new TableColumn( "First Name" );
+		firstNameCol.setMinWidth( 100 );
+		firstNameCol.setCellValueFactory(
+			new PropertyValueFactory< Person, String >( "firstName" ) );
+
+		TableColumn lastNameCol = new TableColumn( "Last Name" );
+		lastNameCol.setMinWidth( 100 );
+		lastNameCol.setCellValueFactory(
+			new PropertyValueFactory< Person, String >( "lastName" ) );
+
+		TableColumn emailCol = new TableColumn( "Email" );
+		emailCol.setMinWidth( 200 );
+		emailCol.setCellValueFactory(
+			new PropertyValueFactory< Person, String >( "email" ) );
+
+		table.setItems( data );
+		table.getColumns().addAll( firstNameCol, lastNameCol, emailCol );
+		rootNode.add( table, 0, 3, 2, 1 );
+
+		TableView< SNMPInterface > ifTableView = new TableView<>();
 		ifTableView.setEditable( false );
 		TableColumn ifIndexCol = new TableColumn( "Index" );
 		TableColumn ifDescrCol = new TableColumn( "Description" );
 		ifDescrCol.prefWidthProperty().bind( ifTableView.widthProperty().multiply( 0.7 ) );
 		ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
-		rootNode.add( ifTableView, 0, 3 );
+//		rootNode.add( ifTableView, 0, 3, 2, 1 );
 
 		aButton.setOnAction( e -> {
 			// Read in each file and populate our ArrayLists.
@@ -102,10 +134,26 @@ public class Main extends Application
 			List< String > inAL2 = ReadFile( secondValue.getText() );
 			// ToDo: Use the output from FindInterfaces to create a collection of SNMPInterface objects that will then populate the TableView object.
 			// Find all SNMP interfaces in those SNMP walks.
-			ObservableList< Map > interfaceMap = FXCollections.observableArrayList( FindInterfaces( inAL1, inAL2 ) );
-			// Populate our ListView with content from the interfaces.
-//			ifListView.setItems( interfaceMap );
-			ifTableView.setItems( interfaceMap );
+			//ObservableList< List > interfaceContainer = FXCollections.observableArrayList( FindInterfaces( inAL1, inAL2 ) );
+			//ObservableList< List > interfaceContainer = FXCollections.observableArrayList( FindInterfaces( inAL1, inAL2 ) );
+			List< SNMPInterface > tempAL = FindInterfaces( inAL1, inAL2 );
+
+			if( tempAL != null )
+			{
+				ObservableList< SNMPInterface > interfaceContainer = FXCollections.observableList( tempAL );
+				for( SNMPInterface tempContainer : interfaceContainer )
+				{
+					System.out.println( "~ " + tempContainer.toString() );
+				}
+				System.out.println( "- " + interfaceContainer.size() );
+				System.out.println( interfaceContainer.toString() );
+				// Populate our ListView with content from the interfaces.
+//		     	ifListView.setItems( ifMap );
+				ifIndexCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifIndex" ) );
+				ifDescrCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifDescr" ) );
+
+				ifTableView.setItems( interfaceContainer );
+			}
 		} );
 
 		primaryStage.setScene( primaryScene );
@@ -150,15 +198,19 @@ public class Main extends Application
 	}
 
 
-	private static Map< Integer, String > FindInterfaces( List< String > walk1, List< String > walk2 )
+	private static List< SNMPInterface > FindInterfaces( List< String > walk1, List< String > walk2 )
 	{
 		String IfDescriptionOID = ".1.3.6.1.2.1.2.2.1.2.";
-		Map< Integer, String > ifListMap = new HashMap<>();
+//		Map< Integer, String > ifListMap = new HashMap<>();
+		List< SNMPInterface > ifListAL = new ArrayList<>();
 		List< String > ifList1 = new ArrayList<>();
 		List< String > ifList2 = new ArrayList<>();
+
+		// Add every line with an interface description OID.
 		ifList1.addAll( walk1.stream().filter( line -> line.contains( IfDescriptionOID ) ).collect( Collectors.toList() ) );
 		ifList2.addAll( walk2.stream().filter( line -> line.contains( IfDescriptionOID ) ).collect( Collectors.toList() ) );
 
+		// If the two walks have the same interface description OIDs.
 		if( ifList1.equals( ifList2 ) )
 		{
 			// Populate our map.
@@ -168,16 +220,75 @@ public class Main extends Application
 				int ifIndex = Integer.parseInt( line.substring( 21, line.indexOf( " = " ) ) );
 				// The interface description will start after the equal sign, and go to the end of the line.
 				String ifDescr = line.substring( line.indexOf( " = " ) + 11 );
-				ifListMap.put( ifIndex, ifDescr );
+
+				// Create a SNMPInterface class object from those values.
+				//SNMPInterface interfaceDescription = new SimpleSNMPInterface( ifDescr, ifIndex );
+				ifListAL.add( new SNMPInterface( ifDescr, ifIndex ) );
+//				ifListMap.put( ifIndex, ifDescr );
 			} );
 			// Output the contents of our map.
-			ifListMap.forEach( ( k, v ) -> System.out.println( k + " " + v ) );
-			return ifListMap;
+			//ifListMap.forEach( ( k, v ) -> System.out.println( k + " " + v ) );
+
+			// Return the populated map.
+			return ifListAL;
 		}
 		else
 		{
 			System.out.println( "The SNMP walks appear to be from different machines.  This will prevent any calculations." );
 			return null;
+		}
+	}
+
+
+	public static class Person
+	{
+
+		private final SimpleStringProperty firstName;
+		private final SimpleStringProperty lastName;
+		private final SimpleStringProperty email;
+
+
+		private Person( String fName, String lName, String email )
+		{
+			this.firstName = new SimpleStringProperty( fName );
+			this.lastName = new SimpleStringProperty( lName );
+			this.email = new SimpleStringProperty( email );
+		}
+
+
+		public String getFirstName()
+		{
+			return firstName.get();
+		}
+
+
+		public void setFirstName( String fName )
+		{
+			firstName.set( fName );
+		}
+
+
+		public String getLastName()
+		{
+			return lastName.get();
+		}
+
+
+		public void setLastName( String fName )
+		{
+			lastName.set( fName );
+		}
+
+
+		public String getEmail()
+		{
+			return email.get();
+		}
+
+
+		public void setEmail( String fName )
+		{
+			email.set( fName );
 		}
 	}
 }
