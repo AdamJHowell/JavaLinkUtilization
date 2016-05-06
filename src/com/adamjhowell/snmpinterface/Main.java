@@ -188,12 +188,17 @@ public class Main extends Application
 				// Find all SNMP interfaces in those SNMP walks.
 				//ObservableList< List > interfaceContainer = FXCollections.observableArrayList( FindInterfaces( inAL1, inAL2 ) );
 //				List< SNMPInterface > ifContainer = FindInterfaces( inAL1, inAL2 );
-				Map< Integer, String > ifContainer = new HashMap<>();
+				Map< Integer, String > ifContainer = FindInterfaces( inAL1, inAL2 );
+
+				for( int i = 0; i < ifContainer.size(); i++ )
+				{
+					System.out.println( ifContainer.get( i + 1 ).toString() );
+				}
 
 				if( ifContainer != null )
 				{
-					//ObservableList< SNMPInterface > interfaceContainer = FXCollections.observableArrayList( ifContainer );
-					ObservableMap< Integer, String > ObservableIfContainer = FXCollections.observableMap( FindInterfaces( inAL1, inAL2 ) );
+					//ObservableList< SNMPInterface > ObservableIfContainer = FXCollections.observableArrayList( ifContainer );
+					ObservableMap< Integer, String > ObservableIfContainer = FXCollections.observableMap( ifContainer );
 
 					// Populate our ListView with content from the interfaces.
 //		          	ifListView.setItems( ifMap );
