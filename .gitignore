@@ -16,3 +16,4 @@ hs_err_pid*
 
 # Files that I do not want included
 *.epp
+*.iml

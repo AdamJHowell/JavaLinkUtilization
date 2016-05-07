@@ -1,17 +1,14 @@
 package com.adamjhowell.snmpinterface;
 
 
-import javafx.beans.property.SimpleStringProperty;
-
-
 /**
  * Created by Adam Howell
  * on 2016-05-05.
  */
 class SNMPInterface
 {
-	private final SimpleStringProperty ifDescr;
-	private final SimpleStringProperty ifIndex;
+	private String ifDescr;
+	private String ifIndex;
 	private int ifSpeed;
 	private int ifInOctets;
 	private int ifInDiscards;
@@ -23,8 +20,8 @@ class SNMPInterface
 
 	SNMPInterface( String ifDescr, String ifIndex, int ifSpeed, int ifInOctets, int ifInDiscards, int ifInErrors, int ifOutOctets, int ifOutDiscards, int ifOutErrors )
 	{
-		this.ifDescr = new SimpleStringProperty( ifDescr );
-		this.ifIndex = new SimpleStringProperty( ifIndex );
+		this.ifDescr =  ifDescr;
+		this.ifIndex = ifIndex;
 		this.ifSpeed = ifSpeed;
 		this.ifInOctets = ifInOctets;
 		this.ifInDiscards = ifInDiscards;
@@ -37,8 +34,8 @@ class SNMPInterface
 
 	SNMPInterface( String ifDescr, String ifIndex )
 	{
-		this.ifDescr = new SimpleStringProperty( ifDescr );
-		this.ifIndex = new SimpleStringProperty( ifIndex );
+		this.ifDescr = ifDescr;
+		this.ifIndex = ifIndex;
 	}
 
 	@Override
