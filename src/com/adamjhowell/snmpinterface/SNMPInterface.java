@@ -40,4 +40,9 @@ class SNMPInterface
 		this.ifDescr = new SimpleStringProperty( ifDescr );
 		this.ifIndex = new SimpleStringProperty( ifIndex );
 	}
+
+	@Override
+	public String toString() {
+		return "SNMPInterface: ifIndex = " + ifIndex + " ifDescr = " + ifDescr;
+	}
 }
