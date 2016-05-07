@@ -20,7 +20,8 @@ class SNMPInterface
 
 	SNMPInterface( String ifDescr, String ifIndex, int ifSpeed, int ifInOctets, int ifInDiscards, int ifInErrors, int ifOutOctets, int ifOutDiscards, int ifOutErrors )
 	{
-		this.ifDescr =  ifDescr;
+		this.ifDescr = ifDescr;
+
 		this.ifIndex = ifIndex;
 		this.ifSpeed = ifSpeed;
 		this.ifInOctets = ifInOctets;
@@ -38,8 +39,33 @@ class SNMPInterface
 		this.ifIndex = ifIndex;
 	}
 
-	@Override
-	public String toString() {
+
+	public String getIfDescr()
+	{
+		return ifDescr;
+	}
+
+
+	public void setIfDescr( String ifDescr )
+	{
+		this.ifDescr = ifDescr;
+	}
+
+
+	public String getIfIndex()
+	{
+		return ifIndex;
+	}
+
+
+	public void setIfIndex( String ifIndex )
+	{
+		this.ifIndex = ifIndex;
+	}
+
+
+	@Override public String toString()
+	{
 		return "SNMPInterface: ifIndex = " + ifIndex + " ifDescr = " + ifDescr;
 	}
 }

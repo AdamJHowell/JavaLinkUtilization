@@ -12,18 +12,14 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.MapValueFactory;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
-import javafx.util.Callback;
-import javafx.util.StringConverter;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -65,154 +61,17 @@ import java.util.stream.Collectors;
 
 public class Main extends Application
 {
-	private TableView< Person > table = new TableView<>();
 	private final ObservableList< Person > data = FXCollections.observableArrayList( new Person( "Jacob", "Smith", "jacob.smith@example.com" ), new Person( "Isabella", "Johnson", "isabella.johnson@example.com" ), new Person( "Ethan", "Williams", "ethan.williams@example.com" ), new Person( "Emma", "Jones", "emma.jones@example.com" ), new Person( "Michael", "Brown", "michael.brown@example.com" ) );
+	private TableView< Person > table = new TableView<>();
 /*
 	private final ObservableList< SNMPInterface > data2 =
 		FXCollections.observableArrayList(
-			new SNMPInterface( "1", "eth0" ),
+			new SNMPInterface( "1", "lo" ),
 			new SNMPInterface( "2", "eth1" ),
 			new SNMPInterface( "3", "eth2" ),
-			new SNMPInterface( "4", "eth3" ),
-			new SNMPInterface( "5", "Loopback" )
+			new SNMPInterface( "4", "bond0" )
 		);
 */
-
-
-	@Override public void start( Stage primaryStage ) throws Exception
-	{
-		primaryStage.setTitle( "SNMP Link Utilization" );
-
-		GridPane rootNode = new GridPane();
-		rootNode.setPadding( new Insets( 15 ) );
-		rootNode.setHgap( 5 );
-		rootNode.setVgap( 5 );
-		rootNode.setAlignment( Pos.CENTER );
-
-		Scene primaryScene = new Scene( rootNode, 500, 600 );
-
-		rootNode.add( new Label( "First walk file:" ), 0, 0 );
-		TextField firstValue = new TextField();
-		firstValue.setText( "walk1.txt" );
-		rootNode.add( firstValue, 1, 0 );
-
-		rootNode.add( new Label( "Second walk file:" ), 0, 1 );
-		TextField secondValue = new TextField();
-		secondValue.setText( "walk2.txt" );
-		rootNode.add( secondValue, 1, 1 );
-
-		Button aButton = new Button( "Show Interfaces" );
-		rootNode.add( aButton, 0, 2 );
-		GridPane.setHalignment( aButton, HPos.LEFT );
-
-//		ListView< String > ifListView = new ListView<>();
-//		rootNode.add( ifListView, 0, 3 );
-
-		table.setEditable( true );
-
-		TableColumn firstNameCol = new TableColumn( "First Name" );
-		firstNameCol.setMinWidth( 100 );
-		firstNameCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "firstName" ) );
-
-		TableColumn lastNameCol = new TableColumn( "Last Name" );
-		lastNameCol.setMinWidth( 100 );
-		lastNameCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "lastName" ) );
-
-		TableColumn emailCol = new TableColumn( "Email" );
-		emailCol.setMinWidth( 200 );
-		emailCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "email" ) );
-
-		table.setItems( data );
-		table.getColumns().addAll( firstNameCol, lastNameCol, emailCol );
-		rootNode.add( table, 0, 3, 2, 1 );
-
-
-		TableColumn< Map, String > firstDataColumn = new TableColumn<>( "Class A" );
-		TableColumn< Map, String > secondDataColumn = new TableColumn<>( "Class B" );
-
-		firstDataColumn.setCellValueFactory( new MapValueFactory( "A" ) );
-		firstDataColumn.setMinWidth( 130 );
-		secondDataColumn.setCellValueFactory( new MapValueFactory( "B" ) );
-		secondDataColumn.setMinWidth( 130 );
-
-		TableView table_view = new TableView<>( generateDataInMap() );
-
-		table_view.setEditable( true );
-		table_view.getSelectionModel().setCellSelectionEnabled( true );
-		table_view.getColumns().setAll( firstDataColumn, secondDataColumn );
-		Callback< TableColumn< Map, String >, TableCell< Map, String > > cellFactoryForMap = p -> new TextFieldTableCell( new StringConverter()
-		{
-			@Override public String toString( Object t )
-			{
-				return t.toString();
-			}
-
-
-			@Override public Object fromString( String string )
-			{
-				return string;
-			}
-		} );
-		firstDataColumn.setCellFactory( cellFactoryForMap );
-		secondDataColumn.setCellFactory( cellFactoryForMap );
-
-		rootNode.add( table_view, 0, 11, 2, 1 );
-
-		//TableView< SNMPInterface > ifTableView = new TableView<>();
-		TableView< SNMPInterface > ifTableView = new TableView<>();
-		ifTableView.setEditable( false );
-		TableColumn ifIndexCol = new TableColumn( "Index" );
-		TableColumn ifDescrCol = new TableColumn( "Description" );
-		ifDescrCol.prefWidthProperty().bind( ifTableView.widthProperty().multiply( 0.7 ) );
-//		ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
-		rootNode.add( ifTableView, 0, 7, 2, 1 );
-
-		aButton.setOnAction( e -> {
-			// Read in each file and populate our ArrayLists.
-			List< String > inAL1 = ReadFile( firstValue.getText() );
-			List< String > inAL2 = ReadFile( secondValue.getText() );
-
-			if( inAL1 != null && inAL2 != null )
-			{
-				// Find all SNMP interfaces in those SNMP walks.
-				//ObservableList< List > interfaceContainer = FXCollections.observableArrayList( FindInterfaces( inAL1, inAL2 ) );
-				List< SNMPInterface > ifContainer = FindInterfaces( inAL1, inAL2 );
-//				Map< Integer, String > ifContainer = FindInterfaces( inAL1, inAL2 );
-
-				for( SNMPInterface test : ifContainer )
-				{
-					System.out.println( test.toString() );
-				}
-
-				if( ifContainer != null )
-				{
-					ObservableList< SNMPInterface > ObservableIfContainer = FXCollections.observableArrayList( ifContainer );
-//					ObservableMap< Integer, String > ObservableIfContainer = FXCollections.observableMap( ifContainer );
-
-					// Populate our ListView with content from the interfaces.
-//		          	ifListView.setItems( ifMap );
-					ifIndexCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifIndex" ) );
-					ifDescrCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifDescr" ) );
-
-					ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
-					ifTableView.setItems( ObservableIfContainer );
-				}
-			}
-			else
-			{
-				Alert alert = new Alert( Alert.AlertType.ERROR );
-				alert.setTitle( "File Error" );
-				alert.setHeaderText( "Invalid file name." );
-				alert.setContentText( "File does not exist." );
-
-				alert.showAndWait();
-			}
-		} );
-
-		primaryStage.setScene( primaryScene );
-
-		primaryStage.show();
-	}
 
 
 	public static void main( String[] args )
@@ -292,6 +151,119 @@ public class Main extends Application
 	}
 
 
+	@Override public void start( Stage primaryStage ) throws Exception
+	{
+		primaryStage.setTitle( "SNMP Link Utilization" );
+
+		GridPane rootNode = new GridPane();
+		rootNode.setPadding( new Insets( 15 ) );
+		rootNode.setHgap( 5 );
+		rootNode.setVgap( 5 );
+		rootNode.setAlignment( Pos.CENTER );
+
+		Scene primaryScene = new Scene( rootNode, 500, 600 );
+
+		rootNode.add( new Label( "First walk file:" ), 0, 0 );
+		TextField firstValue = new TextField();
+		firstValue.setText( "walk1.txt" );
+		rootNode.add( firstValue, 1, 0 );
+
+		rootNode.add( new Label( "Second walk file:" ), 0, 1 );
+		TextField secondValue = new TextField();
+		secondValue.setText( "walk2.txt" );
+		rootNode.add( secondValue, 1, 1 );
+
+		Button aButton = new Button( "Show Interfaces" );
+		rootNode.add( aButton, 0, 2 );
+		GridPane.setHalignment( aButton, HPos.LEFT );
+
+//		ListView< String > ifListView = new ListView<>();
+//		rootNode.add( ifListView, 0, 3 );
+
+		table.setEditable( true );
+
+		TableColumn firstNameCol = new TableColumn( "First Name" );
+		firstNameCol.setMinWidth( 100 );
+		firstNameCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "firstName" ) );
+
+		TableColumn lastNameCol = new TableColumn( "Last Name" );
+		lastNameCol.setMinWidth( 100 );
+		lastNameCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "lastName" ) );
+
+		TableColumn emailCol = new TableColumn( "Email" );
+		emailCol.setMinWidth( 200 );
+		emailCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "email" ) );
+
+		table.setItems( data );
+		table.getColumns().addAll( firstNameCol, lastNameCol, emailCol );
+		rootNode.add( table, 0, 3, 2, 1 );
+
+
+		TableColumn< Map, String > firstDataColumn = new TableColumn<>( "Class A" );
+		TableColumn< Map, String > secondDataColumn = new TableColumn<>( "Class B" );
+
+		firstDataColumn.setCellValueFactory( new MapValueFactory( "A" ) );
+		firstDataColumn.setMinWidth( 130 );
+		secondDataColumn.setCellValueFactory( new MapValueFactory( "B" ) );
+		secondDataColumn.setMinWidth( 130 );
+
+		//TableView< SNMPInterface > ifTableView = new TableView<>();
+		TableView< SNMPInterface > ifTableView = new TableView<>();
+		ifTableView.setEditable( false );
+		TableColumn ifIndexCol = new TableColumn( "Index" );
+		TableColumn ifDescrCol = new TableColumn( "Description" );
+		ifDescrCol.prefWidthProperty().bind( ifTableView.widthProperty().multiply( 0.7 ) );
+//		ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
+		rootNode.add( ifTableView, 0, 7, 2, 1 );
+
+		aButton.setOnAction( e -> {
+			// Read in each file and populate our ArrayLists.
+			List< String > inAL1 = ReadFile( firstValue.getText() );
+			List< String > inAL2 = ReadFile( secondValue.getText() );
+
+			if( inAL1 != null && inAL2 != null )
+			{
+				// Find all SNMP interfaces in those SNMP walks.
+				//ObservableList< List > interfaceContainer = FXCollections.observableArrayList( FindInterfaces( inAL1, inAL2 ) );
+				List< SNMPInterface > ifContainer = FindInterfaces( inAL1, inAL2 );
+//				Map< Integer, String > ifContainer = FindInterfaces( inAL1, inAL2 );
+
+				for( SNMPInterface test : ifContainer )
+				{
+					System.out.println( test.toString() );
+				}
+
+				if( ifContainer != null )
+				{
+					ObservableList< SNMPInterface > ObservableIfContainer = FindInterfaces( inAL1, inAL2 );
+//					ObservableMap< Integer, String > ObservableIfContainer = FXCollections.observableMap( ifContainer );
+
+					// Populate our ListView with content from the interfaces.
+//		          	ifListView.setItems( ifMap );
+//					ifIndexCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifIndex" ) );
+//					ifDescrCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifDescr" ) );
+
+					ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
+					ifTableView.setItems( ObservableIfContainer );
+				}
+			}
+			else
+			{
+				Alert alert = new Alert( Alert.AlertType.ERROR );
+				alert.setTitle( "File Error" );
+				alert.setHeaderText( "Invalid file name." );
+				alert.setContentText( "File does not exist." );
+
+				alert.showAndWait();
+			}
+		} );
+
+		primaryStage.setScene( primaryScene );
+
+		primaryStage.show();
+	}
+
+
 	public static class Person
 	{
 
@@ -342,25 +314,5 @@ public class Main extends Application
 		{
 			email.set( fName );
 		}
-	}
-
-
-	private ObservableList< Map > generateDataInMap()
-	{
-		int max = 10;
-		ObservableList< Map > allData = FXCollections.observableArrayList();
-		for( int i = 1; i < max; i++ )
-		{
-			Map< String, String > dataRow = new HashMap<>();
-
-			String value1 = "A" + i;
-			String value2 = "B" + i;
-
-			dataRow.put( "A", value1 );
-			dataRow.put( "B", value2 );
-
-			allData.add( dataRow );
-		}
-		return allData;
 	}
 }
