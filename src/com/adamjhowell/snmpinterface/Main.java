@@ -66,14 +66,7 @@ import java.util.stream.Collectors;
 public class Main extends Application
 {
 	private TableView< Person > table = new TableView<>();
-	private final ObservableList< Person > data =
-		FXCollections.observableArrayList(
-			new Person( "Jacob", "Smith", "jacob.smith@example.com" ),
-			new Person( "Isabella", "Johnson", "isabella.johnson@example.com" ),
-			new Person( "Ethan", "Williams", "ethan.williams@example.com" ),
-			new Person( "Emma", "Jones", "emma.jones@example.com" ),
-			new Person( "Michael", "Brown", "michael.brown@example.com" )
-		);
+	private final ObservableList< Person > data = FXCollections.observableArrayList( new Person( "Jacob", "Smith", "jacob.smith@example.com" ), new Person( "Isabella", "Johnson", "isabella.johnson@example.com" ), new Person( "Ethan", "Williams", "ethan.williams@example.com" ), new Person( "Emma", "Jones", "emma.jones@example.com" ), new Person( "Michael", "Brown", "michael.brown@example.com" ) );
 /*
 	private final ObservableList< SNMPInterface > data2 =
 		FXCollections.observableArrayList(
@@ -86,8 +79,7 @@ public class Main extends Application
 */
 
 
-	@Override
-	public void start( Stage primaryStage ) throws Exception
+	@Override public void start( Stage primaryStage ) throws Exception
 	{
 		primaryStage.setTitle( "SNMP Link Utilization" );
 
@@ -150,15 +142,13 @@ public class Main extends Application
 		table_view.getColumns().setAll( firstDataColumn, secondDataColumn );
 		Callback< TableColumn< Map, String >, TableCell< Map, String > > cellFactoryForMap = p -> new TextFieldTableCell( new StringConverter()
 		{
-			@Override
-			public String toString( Object t )
+			@Override public String toString( Object t )
 			{
 				return t.toString();
 			}
 
 
-			@Override
-			public Object fromString( String string )
+			@Override public Object fromString( String string )
 			{
 				return string;
 			}
@@ -169,7 +159,7 @@ public class Main extends Application
 		rootNode.add( table_view, 0, 11, 2, 1 );
 
 		//TableView< SNMPInterface > ifTableView = new TableView<>();
-		TableView< Map< Integer, String > > ifTableView = new TableView<>();
+		TableView< SNMPInterface > ifTableView = new TableView<>();
 		ifTableView.setEditable( false );
 		TableColumn ifIndexCol = new TableColumn( "Index" );
 		TableColumn ifDescrCol = new TableColumn( "Description" );
@@ -189,9 +179,9 @@ public class Main extends Application
 				List< SNMPInterface > ifContainer = FindInterfaces( inAL1, inAL2 );
 //				Map< Integer, String > ifContainer = FindInterfaces( inAL1, inAL2 );
 
-				for( int i = 0; i < ifContainer.size(); i++ )
+				for( SNMPInterface test : ifContainer )
 				{
-					System.out.println( ifContainer.get( i + 1 ).toString() );
+					System.out.println( test.toString() );
 				}
 
 				if( ifContainer != null )
@@ -205,7 +195,7 @@ public class Main extends Application
 					ifDescrCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifDescr" ) );
 
 					ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
-		//			ifTableView.setItems( ObservableIfContainer );
+					ifTableView.setItems( ObservableIfContainer );
 				}
 			}
 			else
