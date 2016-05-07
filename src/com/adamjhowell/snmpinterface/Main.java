@@ -5,7 +5,6 @@ import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -187,8 +186,8 @@ public class Main extends Application
 			{
 				// Find all SNMP interfaces in those SNMP walks.
 				//ObservableList< List > interfaceContainer = FXCollections.observableArrayList( FindInterfaces( inAL1, inAL2 ) );
-//				List< SNMPInterface > ifContainer = FindInterfaces( inAL1, inAL2 );
-				Map< Integer, String > ifContainer = FindInterfaces( inAL1, inAL2 );
+				List< SNMPInterface > ifContainer = FindInterfaces( inAL1, inAL2 );
+//				Map< Integer, String > ifContainer = FindInterfaces( inAL1, inAL2 );
 
 				for( int i = 0; i < ifContainer.size(); i++ )
 				{
@@ -197,8 +196,8 @@ public class Main extends Application
 
 				if( ifContainer != null )
 				{
-					//ObservableList< SNMPInterface > ObservableIfContainer = FXCollections.observableArrayList( ifContainer );
-					ObservableMap< Integer, String > ObservableIfContainer = FXCollections.observableMap( ifContainer );
+					ObservableList< SNMPInterface > ObservableIfContainer = FXCollections.observableArrayList( ifContainer );
+//					ObservableMap< Integer, String > ObservableIfContainer = FXCollections.observableMap( ifContainer );
 
 					// Populate our ListView with content from the interfaces.
 //		          	ifListView.setItems( ifMap );
@@ -206,7 +205,7 @@ public class Main extends Application
 					ifDescrCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifDescr" ) );
 
 					ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
-					ifTableView.setItems( ObservableIfContainer );
+		//			ifTableView.setItems( ObservableIfContainer );
 				}
 			}
 			else
@@ -262,12 +261,12 @@ public class Main extends Application
 	}
 
 
-	private static Map< Integer, String > FindInterfaces( List< String > walk1, List< String > walk2 )
+	private static ObservableList< SNMPInterface > FindInterfaces( List< String > walk1, List< String > walk2 )
 	{
 		String IfDescriptionOID = ".1.3.6.1.2.1.2.2.1.2.";
-		Map< Integer, String > ifListMap = new HashMap<>();
+//		ObservableMap< Integer, String > ifListMap = new HashMap<>();
 		//List< SNMPInterface > ifListAL = new ArrayList<>();
-//		ObservableList< SNMPInterface > ifListAL = FXCollections.observableArrayList();
+		ObservableList< SNMPInterface > ifListAL = FXCollections.observableArrayList();
 		List< String > ifList1 = new ArrayList<>();
 		List< String > ifList2 = new ArrayList<>();
 
@@ -282,18 +281,18 @@ public class Main extends Application
 			ifList1.stream().filter( line -> line.startsWith( IfDescriptionOID ) ).forEach( line -> {
 				// The interface index will start at position 21 and end one position before the first equal sign.
 				// There may be rare cases where an OID will contain more than one equal sign.
-				int ifIndex = Integer.parseInt( line.substring( 21, line.indexOf( " = " ) ) );
+				String ifIndex = line.substring( 21, line.indexOf( " = " ) );
 				// The interface description will start after the equal sign, and go to the end of the line.
 				String ifDescr = line.substring( line.indexOf( " = " ) + 11 );
 
 				// Create a SNMPInterface class object from those values.
-//				ifListAL.add( new SNMPInterface( ifDescr, ifIndex ) );
-				ifListMap.put( ifIndex, ifDescr );
+				ifListAL.add( new SNMPInterface( ifDescr, ifIndex ) );
+//				ifListMap.put( ifIndex, ifDescr );
 			} );
 
 			// Return the populated container.
-			return ifListMap;
-//			return ifListAL;
+//			return ifListMap;
+			return ifListAL;
 		}
 		else
 		{
