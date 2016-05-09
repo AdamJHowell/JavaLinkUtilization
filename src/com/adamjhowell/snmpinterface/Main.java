@@ -10,7 +10,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.MapValueFactory;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
@@ -21,7 +20,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -61,17 +59,24 @@ import java.util.stream.Collectors;
 
 public class Main extends Application
 {
-	private final ObservableList< Person > data = FXCollections.observableArrayList( new Person( "Jacob", "Smith", "jacob.smith@example.com" ), new Person( "Isabella", "Johnson", "isabella.johnson@example.com" ), new Person( "Ethan", "Williams", "ethan.williams@example.com" ), new Person( "Emma", "Jones", "emma.jones@example.com" ), new Person( "Michael", "Brown", "michael.brown@example.com" ) );
-	private TableView< Person > table = new TableView<>();
-/*
+	private final ObservableList< Person > data =
+		FXCollections.observableArrayList(
+			new Person( "Jacob", "Smith", "jacob.smith@example.com" ),
+			new Person( "Isabella", "Johnson", "isabella.johnson@example.com" ),
+			new Person( "Ethan", "Williams", "ethan.williams@example.com" ),
+			new Person( "Emma", "Jones", "emma.jones@example.com" ),
+			new Person( "Michael", "Brown", "michael.brown@example.com" )
+		);
+	private TableView< Person > sampleTable = new TableView<>();
+
 	private final ObservableList< SNMPInterface > data2 =
 		FXCollections.observableArrayList(
-			new SNMPInterface( "1", "lo" ),
-			new SNMPInterface( "2", "eth1" ),
-			new SNMPInterface( "3", "eth2" ),
-			new SNMPInterface( "4", "bond0" )
+			new SNMPInterface( "99", "testlo" ),
+			new SNMPInterface( "98", "testeth1" ),
+			new SNMPInterface( "97", "testeth2" ),
+			new SNMPInterface( "96", "testbond0" )
 		);
-*/
+	private TableView< SNMPInterface > ifTableView = new TableView<>();
 
 
 	public static void main( String[] args )
@@ -114,7 +119,7 @@ public class Main extends Application
 	{
 		String IfDescriptionOID = ".1.3.6.1.2.1.2.2.1.2.";
 //		ObservableMap< Integer, String > ifListMap = new HashMap<>();
-		//List< SNMPInterface > ifListAL = new ArrayList<>();
+		//List< SNMPInterface2 > ifListAL = new ArrayList<>();
 		ObservableList< SNMPInterface > ifListAL = FXCollections.observableArrayList();
 		List< String > ifList1 = new ArrayList<>();
 		List< String > ifList2 = new ArrayList<>();
@@ -123,7 +128,7 @@ public class Main extends Application
 		ifList1.addAll( walk1.stream().filter( line -> line.contains( IfDescriptionOID ) ).collect( Collectors.toList() ) );
 		ifList2.addAll( walk2.stream().filter( line -> line.contains( IfDescriptionOID ) ).collect( Collectors.toList() ) );
 
-		// If the two walks have the same interface description OIDs.
+		// If the two walks have the same interface description OIDs, we can proceed.
 		if( ifList1.equals( ifList2 ) )
 		{
 			// Populate our map.
@@ -134,8 +139,8 @@ public class Main extends Application
 				// The interface description will start after the equal sign, and go to the end of the line.
 				String ifDescr = line.substring( line.indexOf( " = " ) + 11 );
 
-				// Create a SNMPInterface class object from those values.
-				ifListAL.add( new SNMPInterface( ifDescr, ifIndex ) );
+				// Create a SNMPInterface2 class object from those values.
+				ifListAL.add( new SNMPInterface( ifIndex, ifDescr ) );
 //				ifListMap.put( ifIndex, ifDescr );
 			} );
 
@@ -151,7 +156,8 @@ public class Main extends Application
 	}
 
 
-	@Override public void start( Stage primaryStage ) throws Exception
+	@Override
+	public void start( Stage primaryStage ) throws Exception
 	{
 		primaryStage.setTitle( "SNMP Link Utilization" );
 
@@ -173,16 +179,17 @@ public class Main extends Application
 		secondValue.setText( "walk2.txt" );
 		rootNode.add( secondValue, 1, 1 );
 
-		Button aButton = new Button( "Show Interfaces" );
-		rootNode.add( aButton, 0, 2 );
-		GridPane.setHalignment( aButton, HPos.LEFT );
+		Button ShowInterfaceButton = new Button( "Show Interfaces" );
+		rootNode.add( ShowInterfaceButton, 0, 2 );
+		GridPane.setHalignment( ShowInterfaceButton, HPos.LEFT );
 
 //		ListView< String > ifListView = new ListView<>();
 //		rootNode.add( ifListView, 0, 3 );
 
-		table.setEditable( true );
+		// Add the tutorial table from: http://docs.oracle.com/javafx/2/ui_controls/table-view.htm
+		sampleTable.setEditable( true );
 
-		TableColumn firstNameCol = new TableColumn( "First Name" );
+		TableColumn firstNameCol = new TableColumn( "First Name" );// This creates the column and sets the display title.
 		firstNameCol.setMinWidth( 100 );
 		firstNameCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "firstName" ) );
 
@@ -194,29 +201,35 @@ public class Main extends Application
 		emailCol.setMinWidth( 200 );
 		emailCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "email" ) );
 
-		table.setItems( data );
-		table.getColumns().addAll( firstNameCol, lastNameCol, emailCol );
-		rootNode.add( table, 0, 3, 2, 1 );
+		sampleTable.setItems( data );
+		sampleTable.getColumns().addAll( firstNameCol, lastNameCol, emailCol );
+		rootNode.add( sampleTable, 0, 3, 2, 1 );
 
+		// Add my table of SNMP Interfaces.  I have no idea why this does not populate with data.
+		ifTableView.setEditable( true );
 
-		TableColumn< Map, String > firstDataColumn = new TableColumn<>( "Class A" );
-		TableColumn< Map, String > secondDataColumn = new TableColumn<>( "Class B" );
-
-		firstDataColumn.setCellValueFactory( new MapValueFactory( "A" ) );
-		firstDataColumn.setMinWidth( 130 );
-		secondDataColumn.setCellValueFactory( new MapValueFactory( "B" ) );
-		secondDataColumn.setMinWidth( 130 );
-
-		//TableView< SNMPInterface > ifTableView = new TableView<>();
-		TableView< SNMPInterface > ifTableView = new TableView<>();
-		ifTableView.setEditable( false );
 		TableColumn ifIndexCol = new TableColumn( "Index" );
+		ifIndexCol.setMinWidth( 100 );
+		ifIndexCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifIndex" ) );
+
 		TableColumn ifDescrCol = new TableColumn( "Description" );
+		ifDescrCol.setMinWidth( 100 );
+		ifDescrCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifDescr" ) );
 		ifDescrCol.prefWidthProperty().bind( ifTableView.widthProperty().multiply( 0.7 ) );
-//		ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
+
+		// These next three lines should populate the table with data, and display it on the stage, even if the button is not yet pressed.
+		ifTableView.setItems( data2 );
+		ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
 		rootNode.add( ifTableView, 0, 7, 2, 1 );
 
-		aButton.setOnAction( e -> {
+		// Test code to see what is in 'data2'.
+		for( SNMPInterface test : data2 )
+		{
+			System.out.println( "`" + test.toString() );
+		}
+
+		// Create an event handler for the show interface button.
+		ShowInterfaceButton.setOnAction( e -> {
 			// Read in each file and populate our ArrayLists.
 			List< String > inAL1 = ReadFile( firstValue.getText() );
 			List< String > inAL2 = ReadFile( secondValue.getText() );
@@ -228,22 +241,23 @@ public class Main extends Application
 				List< SNMPInterface > ifContainer = FindInterfaces( inAL1, inAL2 );
 //				Map< Integer, String > ifContainer = FindInterfaces( inAL1, inAL2 );
 
-				for( SNMPInterface test : ifContainer )
-				{
-					System.out.println( test.toString() );
-				}
-
 				if( ifContainer != null )
 				{
+					// Test code to see what is in 'ifContainer'.
+					for( SNMPInterface test : ifContainer )
+					{
+						System.out.println( "~" + test.toString() );
+					}
+
 					ObservableList< SNMPInterface > ObservableIfContainer = FindInterfaces( inAL1, inAL2 );
 //					ObservableMap< Integer, String > ObservableIfContainer = FXCollections.observableMap( ifContainer );
 
 					// Populate our ListView with content from the interfaces.
 //		          	ifListView.setItems( ifMap );
-//					ifIndexCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifIndex" ) );
-//					ifDescrCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifDescr" ) );
+//					ifIndexCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface2, String >( "ifIndex" ) );
+//					ifDescrCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface2, String >( "ifDescr" ) );
 
-					ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
+					//ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
 					ifTableView.setItems( ObservableIfContainer );
 				}
 			}
@@ -313,6 +327,51 @@ public class Main extends Application
 		public void setEmail( String fName )
 		{
 			email.set( fName );
+		}
+	}
+
+
+	public static class SNMPInterface
+	{
+		private final SimpleStringProperty ifIndex;
+		private final SimpleStringProperty ifDescr;
+
+
+		SNMPInterface( String ifIndex, String ifDescr )
+		{
+			this.ifIndex = new SimpleStringProperty( ifIndex );
+			this.ifDescr = new SimpleStringProperty( ifDescr );
+		}
+
+
+		String getIfIndex()
+		{
+			return ifIndex.get();
+		}
+
+
+		void setIfIndex( String Index )
+		{
+			ifIndex.set( Index );
+		}
+
+
+		String getIfDescr()
+		{
+			return ifDescr.get();
+		}
+
+
+		void setIfDescr( String Descr )
+		{
+			ifDescr.set( Descr );
+		}
+
+
+		@Override
+		public String toString()
+		{
+			return "SNMPInterface2: ifIndex = " + ifIndex + " ifDescr = " + ifDescr;
 		}
 	}
 }
