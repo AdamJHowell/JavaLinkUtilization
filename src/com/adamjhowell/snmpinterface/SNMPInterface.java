@@ -8,7 +8,7 @@ import javafx.beans.property.SimpleStringProperty;
  * Created by Adam Howell
  * on 2016-05-05.
  */
-class SNMPInterface2
+public class SNMPInterface
 {
 	private final SimpleStringProperty ifIndex;
 	private final SimpleStringProperty ifDescr;
@@ -21,7 +21,7 @@ class SNMPInterface2
 	private int ifOutErrors;
 
 
-	SNMPInterface2( String ifDescr, String ifIndex, int ifSpeed, int ifInOctets, int ifInDiscards, int ifInErrors, int ifOutOctets, int ifOutDiscards, int ifOutErrors )
+	SNMPInterface( String ifDescr, String ifIndex, int ifSpeed, int ifInOctets, int ifInDiscards, int ifInErrors, int ifOutOctets, int ifOutDiscards, int ifOutErrors )
 	{
 		this.ifIndex = new SimpleStringProperty( ifIndex );
 		this.ifDescr = new SimpleStringProperty( ifDescr );
@@ -35,8 +35,7 @@ class SNMPInterface2
 	}
 
 
-
-	SNMPInterface2( String ifIndex, String ifDescr )
+	SNMPInterface( String ifIndex, String ifDescr )
 	{
 		this.ifIndex = new SimpleStringProperty( ifIndex );
 		this.ifDescr = new SimpleStringProperty( ifDescr );
@@ -70,6 +69,6 @@ class SNMPInterface2
 	@Override
 	public String toString()
 	{
-		return "SNMPInterface2: ifIndex = " + ifIndex + " ifDescr = " + ifDescr;
+		return "SNMPInterface: ifIndex = " + ifIndex + " ifDescr = " + ifDescr;
 	}
 }

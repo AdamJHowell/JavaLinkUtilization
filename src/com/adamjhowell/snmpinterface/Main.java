@@ -2,7 +2,6 @@ package com.adamjhowell.snmpinterface;
 
 
 import javafx.application.Application;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
@@ -69,7 +68,7 @@ public class Main extends Application
 			new SNMPInterface( "96", "button" )
 		);
 
-	private final static boolean DEBUG = true;
+	private final static boolean DEBUG = false;
 
 
 	public static void main( String[] args )
@@ -111,8 +110,6 @@ public class Main extends Application
 	private static ObservableList< SNMPInterface > FindInterfaces( List< String > walk1, List< String > walk2 )
 	{
 		String IfDescriptionOID = ".1.3.6.1.2.1.2.2.1.2.";
-//		ObservableMap< Integer, String > ifListMap = new HashMap<>();
-		//List< SNMPInterface2 > ifListAL = new ArrayList<>();
 		ObservableList< SNMPInterface > ifListAL = FXCollections.observableArrayList();
 		List< String > ifList1 = new ArrayList<>();
 		List< String > ifList2 = new ArrayList<>();
@@ -132,13 +129,11 @@ public class Main extends Application
 				// The interface description will start after the equal sign, and go to the end of the line.
 				String ifDescr = line.substring( line.indexOf( " = " ) + 11 );
 
-				// Create a SNMPInterface2 class object from those values.
+				// Create a SNMPInterface class object from those values.
 				ifListAL.add( new SNMPInterface( ifIndex, ifDescr ) );
-//				ifListMap.put( ifIndex, ifDescr );
 			} );
 
 			// Return the populated container.
-//			return ifListMap;
 			return ifListAL;
 		}
 		else
@@ -253,50 +248,5 @@ public class Main extends Application
 
 		// Show the stage.
 		primaryStage.show();
-	}
-
-
-	public static class SNMPInterface
-	{
-		private final SimpleStringProperty ifIndex;
-		private final SimpleStringProperty ifDescr;
-
-
-		SNMPInterface( String ifIndex, String ifDescr )
-		{
-			this.ifIndex = new SimpleStringProperty( ifIndex );
-			this.ifDescr = new SimpleStringProperty( ifDescr );
-		}
-
-
-		public String getIfIndex()
-		{
-			return ifIndex.get();
-		}
-
-
-		public void setIfIndex( String Index )
-		{
-			ifIndex.set( Index );
-		}
-
-
-		public String getIfDescr()
-		{
-			return ifDescr.get();
-		}
-
-
-		public void setIfDescr( String Descr )
-		{
-			ifDescr.set( Descr );
-		}
-
-
-		@Override
-		public String toString()
-		{
-			return "SNMPInterface: ifIndex = " + ifIndex + " ifDescr = " + ifDescr;
-		}
 	}
 }
