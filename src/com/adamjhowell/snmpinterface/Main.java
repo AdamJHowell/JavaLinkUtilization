@@ -59,7 +59,9 @@ import java.util.stream.Collectors;
 
 public class Main extends Application
 {
-	private final ObservableList< Person > data =
+	// This table (personTableView) and data (personData) is taken from http://docs.oracle.com/javafx/2/ui_controls/table-view.htm
+	private TableView< Person > personTableView = new TableView<>();
+	private final ObservableList< Person > personData =
 		FXCollections.observableArrayList(
 			new Person( "Jacob", "Smith", "jacob.smith@example.com" ),
 			new Person( "Isabella", "Johnson", "isabella.johnson@example.com" ),
@@ -67,16 +69,18 @@ public class Main extends Application
 			new Person( "Emma", "Jones", "emma.jones@example.com" ),
 			new Person( "Michael", "Brown", "michael.brown@example.com" )
 		);
-	private TableView< Person > sampleTable = new TableView<>();
 
-	private final ObservableList< SNMPInterface > data2 =
+	// This table (interfaceTableView) and data (interfaceData) are my attempts to populate my own table.  This is not working.
+	private TableView< SNMPInterface > interfaceTableView = new TableView<>();
+	private final ObservableList< SNMPInterface > interfaceData =
 		FXCollections.observableArrayList(
 			new SNMPInterface( "99", "testlo" ),
 			new SNMPInterface( "98", "testeth1" ),
 			new SNMPInterface( "97", "testeth2" ),
 			new SNMPInterface( "96", "testbond0" )
 		);
-	private TableView< SNMPInterface > ifTableView = new TableView<>();
+
+	final static boolean DEBUG = true;
 
 
 	public static void main( String[] args )
@@ -187,7 +191,7 @@ public class Main extends Application
 //		rootNode.add( ifListView, 0, 3 );
 
 		// Add the tutorial table from: http://docs.oracle.com/javafx/2/ui_controls/table-view.htm
-		sampleTable.setEditable( true );
+		personTableView.setEditable( true );
 
 		TableColumn firstNameCol = new TableColumn( "First Name" );// This creates the column and sets the display title.
 		firstNameCol.setMinWidth( 100 );
@@ -201,31 +205,34 @@ public class Main extends Application
 		emailCol.setMinWidth( 200 );
 		emailCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "email" ) );
 
-		sampleTable.setItems( data );
-		sampleTable.getColumns().addAll( firstNameCol, lastNameCol, emailCol );
-		rootNode.add( sampleTable, 0, 3, 2, 1 );
+		personTableView.setItems( personData );
+		personTableView.getColumns().addAll( firstNameCol, lastNameCol, emailCol );
+		rootNode.add( personTableView, 0, 3, 2, 1 );
 
-		// Add my table of SNMP Interfaces.  I have no idea why this does not populate with data.
-		ifTableView.setEditable( true );
+		// Add my table of SNMP Interfaces.  I have no idea why this does not populate with personData.
+		interfaceTableView.setEditable( true );
 
-		TableColumn ifIndexCol = new TableColumn( "Index" );
-		ifIndexCol.setMinWidth( 100 );
-		ifIndexCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifIndex" ) );
+		// Create a column for the SNMP interface indices.
+		TableColumn< SNMPInterface, String > ifIndexCol = new TableColumn<>( "Index" );
+		ifIndexCol.setCellValueFactory( new PropertyValueFactory<>( "ifIndex" ) );
 
+		// Create a column for the SNMP interface descriptions.
 		TableColumn ifDescrCol = new TableColumn( "Description" );
-		ifDescrCol.setMinWidth( 100 );
-		ifDescrCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface, String >( "ifDescr" ) );
-		ifDescrCol.prefWidthProperty().bind( ifTableView.widthProperty().multiply( 0.7 ) );
+		ifDescrCol.setCellValueFactory( new PropertyValueFactory<>( "ifDescr" ) );
+		ifDescrCol.prefWidthProperty().bind( interfaceTableView.widthProperty().multiply( 0.7 ) );
 
-		// These next three lines should populate the table with data, and display it on the stage, even if the button is not yet pressed.
-		ifTableView.setItems( data2 );
-		ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
-		rootNode.add( ifTableView, 0, 7, 2, 1 );
+		// These next lines should populate the table with interfaceData, and add it to the stage, even if the button is not yet pressed.
+		interfaceTableView.setItems( interfaceData );
+		interfaceTableView.getColumns().setAll( ifIndexCol, ifDescrCol );
+		rootNode.add( interfaceTableView, 0, 7, 2, 1 );
 
-		// Test code to see what is in 'data2'.
-		for( SNMPInterface test : data2 )
+		if( DEBUG )
 		{
-			System.out.println( "`" + test.toString() );
+			// Test code to see what is in 'interfaceData'.
+			for( SNMPInterface test : interfaceData )
+			{
+				System.out.println( "Static data: " + test.toString() );
+			}
 		}
 
 		// Create an event handler for the show interface button.
@@ -234,35 +241,34 @@ public class Main extends Application
 			List< String > inAL1 = ReadFile( firstValue.getText() );
 			List< String > inAL2 = ReadFile( secondValue.getText() );
 
+			// Check that neither ReadFile returned a null.
 			if( inAL1 != null && inAL2 != null )
 			{
-				// Find all SNMP interfaces in those SNMP walks.
-				//ObservableList< List > interfaceContainer = FXCollections.observableArrayList( FindInterfaces( inAL1, inAL2 ) );
-				List< SNMPInterface > ifContainer = FindInterfaces( inAL1, inAL2 );
-//				Map< Integer, String > ifContainer = FindInterfaces( inAL1, inAL2 );
+				// Create an ObservableList of SNMPInterface objects from those files.
+				ObservableList< SNMPInterface > ifContainer = FindInterfaces( inAL1, inAL2 );
 
+				// Check that FindInterfaces did not return a null.
 				if( ifContainer != null )
 				{
-					// Test code to see what is in 'ifContainer'.
-					for( SNMPInterface test : ifContainer )
+					if( DEBUG )
 					{
-						System.out.println( "~" + test.toString() );
+						// Test code to see what is in 'ifContainer'.
+						for( SNMPInterface test : ifContainer )
+						{
+							System.out.println( "File data: " + test.toString() );
+						}
 					}
 
+					// Find all SNMP interfaces in those SNMP walks.
 					ObservableList< SNMPInterface > ObservableIfContainer = FindInterfaces( inAL1, inAL2 );
-//					ObservableMap< Integer, String > ObservableIfContainer = FXCollections.observableMap( ifContainer );
 
 					// Populate our ListView with content from the interfaces.
-//		          	ifListView.setItems( ifMap );
-//					ifIndexCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface2, String >( "ifIndex" ) );
-//					ifDescrCol.setCellValueFactory( new PropertyValueFactory< SNMPInterface2, String >( "ifDescr" ) );
-
-					//ifTableView.getColumns().addAll( ifIndexCol, ifDescrCol );
-					ifTableView.setItems( ObservableIfContainer );
+					interfaceTableView.setItems( ObservableIfContainer );
 				}
 			}
 			else
 			{
+				// Create a pop-up alert to signal that a file name was invalid.
 				Alert alert = new Alert( Alert.AlertType.ERROR );
 				alert.setTitle( "File Error" );
 				alert.setHeaderText( "Invalid file name." );
@@ -272,8 +278,10 @@ public class Main extends Application
 			}
 		} );
 
+		// Set the stage with the scene.
 		primaryStage.setScene( primaryScene );
 
+		// Show the stage.
 		primaryStage.show();
 	}
 
@@ -371,7 +379,7 @@ public class Main extends Application
 		@Override
 		public String toString()
 		{
-			return "SNMPInterface2: ifIndex = " + ifIndex + " ifDescr = " + ifDescr;
+			return "SNMPInterface: ifIndex = " + ifIndex + " ifDescr = " + ifDescr;
 		}
 	}
 }
