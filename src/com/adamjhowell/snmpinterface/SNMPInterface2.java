@@ -12,20 +12,19 @@ class SNMPInterface2
 {
 	private final SimpleStringProperty ifIndex;
 	private final SimpleStringProperty ifDescr;
-/*	private int ifSpeed;
+	private int ifSpeed;
 	private int ifInOctets;
 	private int ifInDiscards;
 	private int ifInErrors;
 	private int ifOutOctets;
 	private int ifOutDiscards;
 	private int ifOutErrors;
-*/
 
-/*	SNMPInterface2( String ifDescr, String ifIndex, int ifSpeed, int ifInOctets, int ifInDiscards, int ifInErrors, int ifOutOctets, int ifOutDiscards, int ifOutErrors )
+
+	SNMPInterface2( String ifDescr, String ifIndex, int ifSpeed, int ifInOctets, int ifInDiscards, int ifInErrors, int ifOutOctets, int ifOutDiscards, int ifOutErrors )
 	{
-		this.ifDescr = ifDescr;
-
-		this.ifIndex = ifIndex;
+		this.ifIndex = new SimpleStringProperty( ifIndex );
+		this.ifDescr = new SimpleStringProperty( ifDescr );
 		this.ifSpeed = ifSpeed;
 		this.ifInOctets = ifInOctets;
 		this.ifInDiscards = ifInDiscards;
@@ -34,7 +33,7 @@ class SNMPInterface2
 		this.ifOutDiscards = ifOutDiscards;
 		this.ifOutErrors = ifOutErrors;
 	}
-*/
+
 
 
 	SNMPInterface2( String ifIndex, String ifDescr )
@@ -44,25 +43,25 @@ class SNMPInterface2
 	}
 
 
-	String getIfIndex()
+	public String getIfIndex()
 	{
 		return ifIndex.get();
 	}
 
 
-	void setIfIndex( String Index )
+	public void setIfIndex( String Index )
 	{
 		ifIndex.set( Index );
 	}
 
 
-	String getIfDescr()
+	public String getIfDescr()
 	{
 		return ifDescr.get();
 	}
 
 
-	void setIfDescr( String Descr )
+	public void setIfDescr( String Descr )
 	{
 		ifDescr.set( Descr );
 	}

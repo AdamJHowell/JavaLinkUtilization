@@ -13,6 +13,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -58,28 +59,17 @@ import java.util.stream.Collectors;
 
 public class Main extends Application
 {
-	// This table (personTableView) and data (personData) is taken from http://docs.oracle.com/javafx/2/ui_controls/table-view.htm
-	private TableView< Person > personTableView = new TableView<>();
-	private final ObservableList< Person > personData =
-		FXCollections.observableArrayList(
-			new Person( "Jacob", "Smith", "jacob.smith@example.com" ),
-			new Person( "Isabella", "Johnson", "isabella.johnson@example.com" ),
-			new Person( "Ethan", "Williams", "ethan.williams@example.com" ),
-			new Person( "Emma", "Jones", "emma.jones@example.com" ),
-			new Person( "Michael", "Brown", "michael.brown@example.com" )
-		);
-
-	// This table (interfaceTableView) and data (interfaceData) are my attempts to populate my own table.  This is not working.
+	// This table (interfaceTableView) and data (interfaceData) are my attempts to populate my own table.
 	private TableView< SNMPInterface > interfaceTableView = new TableView<>();
 	private final ObservableList< SNMPInterface > interfaceData =
 		FXCollections.observableArrayList(
-			new SNMPInterface( "99", "testlo" ),
-			new SNMPInterface( "98", "testeth1" ),
-			new SNMPInterface( "97", "testeth2" ),
-			new SNMPInterface( "96", "testbond0" )
+			new SNMPInterface( "99", "test" ),
+			new SNMPInterface( "98", "data" ),
+			new SNMPInterface( "97", "press" ),
+			new SNMPInterface( "96", "button" )
 		);
 
-	final static boolean DEBUG = true;
+	private final static boolean DEBUG = true;
 
 
 	public static void main( String[] args )
@@ -189,26 +179,7 @@ public class Main extends Application
 //		ListView< String > ifListView = new ListView<>();
 //		rootNode.add( ifListView, 0, 3 );
 
-		// Add the tutorial table from: http://docs.oracle.com/javafx/2/ui_controls/table-view.htm
-		personTableView.setEditable( true );
-
-		TableColumn firstNameCol = new TableColumn( "First Name" );// This creates the column and sets the display title.
-		firstNameCol.setMinWidth( 100 );
-		firstNameCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "firstName" ) );
-
-		TableColumn lastNameCol = new TableColumn( "Last Name" );
-		lastNameCol.setMinWidth( 100 );
-		lastNameCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "lastName" ) );
-
-		TableColumn emailCol = new TableColumn( "Email" );
-		emailCol.setMinWidth( 200 );
-		emailCol.setCellValueFactory( new PropertyValueFactory< Person, String >( "email" ) );
-
-		personTableView.setItems( personData );
-		personTableView.getColumns().addAll( firstNameCol, lastNameCol, emailCol );
-		rootNode.add( personTableView, 0, 3, 2, 1 );
-
-		// Add my table of SNMP Interfaces.  I have no idea why this does not populate with personData.
+		// Add my table of SNMP Interfaces.
 		interfaceTableView.setEditable( true );
 
 		// Create a column for the SNMP interface indices.
@@ -216,7 +187,7 @@ public class Main extends Application
 		ifIndexCol.setCellValueFactory( new PropertyValueFactory<>( "ifIndex" ) );
 
 		// Create a column for the SNMP interface descriptions.
-		TableColumn ifDescrCol = new TableColumn( "Description" );
+		TableColumn< SNMPInterface, String > ifDescrCol = new TableColumn<>( "Description" );
 		ifDescrCol.setCellValueFactory( new PropertyValueFactory<>( "ifDescr" ) );
 		ifDescrCol.prefWidthProperty().bind( interfaceTableView.widthProperty().multiply( 0.7 ) );
 
@@ -285,59 +256,6 @@ public class Main extends Application
 	}
 
 
-	public static class Person
-	{
-
-		private final SimpleStringProperty firstName;
-		private final SimpleStringProperty lastName;
-		private final SimpleStringProperty email;
-
-
-		private Person( String fName, String lName, String email )
-		{
-			this.firstName = new SimpleStringProperty( fName );
-			this.lastName = new SimpleStringProperty( lName );
-			this.email = new SimpleStringProperty( email );
-		}
-
-
-		public String getFirstName()
-		{
-			return firstName.get();
-		}
-
-
-		public void setFirstName( String fName )
-		{
-			firstName.set( fName );
-		}
-
-
-		public String getLastName()
-		{
-			return lastName.get();
-		}
-
-
-		public void setLastName( String fName )
-		{
-			lastName.set( fName );
-		}
-
-
-		public String getEmail()
-		{
-			return email.get();
-		}
-
-
-		public void setEmail( String fName )
-		{
-			email.set( fName );
-		}
-	}
-
-
 	public static class SNMPInterface
 	{
 		private final SimpleStringProperty ifIndex;
@@ -351,25 +269,25 @@ public class Main extends Application
 		}
 
 
-		String getIfIndex()
+		public String getIfIndex()
 		{
 			return ifIndex.get();
 		}
 
 
-		void setIfIndex( String Index )
+		public void setIfIndex( String Index )
 		{
 			ifIndex.set( Index );
 		}
 
 
-		String getIfDescr()
+		public String getIfDescr()
 		{
 			return ifDescr.get();
 		}
 
 
-		void setIfDescr( String Descr )
+		public void setIfDescr( String Descr )
 		{
 			ifDescr.set( Descr );
 		}
