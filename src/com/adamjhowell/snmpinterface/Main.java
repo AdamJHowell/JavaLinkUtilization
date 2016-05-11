@@ -4,14 +4,12 @@ package com.adamjhowell.snmpinterface;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
@@ -80,6 +78,7 @@ public class Main extends Application
 	private final static String IF_OUT_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.16.";     // The OID for ifOutOctets (Interface Outbound Octet Count)
 	private final static String IF_OUT_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.19.";     // The OID for ifOutDiscards (Interface Outbound Discards)
 	private final static String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";     // The OID for ifOutErrors (Interface Outbound Errors)
+	private final static long COUNTER32MAX = 4294967295L;                         // The maximum value a Counter32 can hold.
 
 	private final static boolean DEBUG = false;
 
@@ -156,7 +155,7 @@ public class Main extends Application
 	}
 
 
-	private static SNMPInterface BuildCompleteSNMPInterface( List< String > walk1, long ifIndex )
+	private static SNMPInterface BuildCompleteSNMPInterface( List< String > walk, long ifIndex )
 	{
 		long tempSysUpTime = 0;
 		String tempIfDescr = "";
@@ -168,12 +167,10 @@ public class Main extends Application
 		long tempIfOutDiscards = 0;
 		long tempIfOutErrors = 0;
 
-		System.out.println( "I was passed: " + ifIndex );
-		for( String line : walk1 )
+		for( String line : walk )
 		{
 			if( line.startsWith( SYS_UPTIME_OID ) )
 			{
-				System.out.println( "~" + line );
 				tempSysUpTime = Long.parseLong( line.substring( 32 ) );
 				if( DEBUG )
 				{
@@ -257,6 +254,73 @@ public class Main extends Application
 	}
 
 
+	private static String CalculateUtilization( SNMPInterface walk1, SNMPInterface walk2 )
+	{
+		// The generic formula for utilization is: ( delta-octets * 8 * 10 ) / ( delta-seconds * ifSpeed )
+		long timeDelta;
+		long ifSpeed;
+		long inOctetDelta;
+		Double utilization;
+
+		// Get the time delta.  The timestamps MUST be different for utilization to be meaningful.
+		if( walk1.getSysUpTime() != walk2.getSysUpTime() )
+		{
+			// Get the number of ticks between the two walks.  There are 100 ticks per second.
+			timeDelta = walk2.getSysUpTime() - walk1.getSysUpTime();
+			// Convert to seconds.
+			timeDelta /= 100;
+			if( DEBUG )
+			{
+				System.out.println( "Time delta was " + timeDelta + " seconds." );
+			}
+		}
+		else
+		{
+			return "SysUpTimes match: " + walk1.getSysUpTime() + ", " + walk2.getSysUpTime();
+		}
+
+		// Get the ifSpeed.  These MUST match for the two interfaces.
+		if( walk1.getIfSpeed() == walk2.getIfSpeed() )
+		{
+			ifSpeed = walk1.getIfSpeed();
+			if( DEBUG )
+			{
+				System.out.println( "ifSpeed matches and is " + ifSpeed );
+			}
+		}
+		else
+		{
+			return "ifSpeed does not match!";
+		}
+
+		// Get the inOctet delta.
+		inOctetDelta = walk2.getIfInOctets() - walk1.getIfInOctets();
+		if( inOctetDelta < 0 )
+		{
+			inOctetDelta = walk2.getIfInOctets() + COUNTER32MAX - walk1.getIfInOctets();
+			System.out.println( "The Octet counter 'wrapped'." );
+		}
+		if( !DEBUG )
+		{
+			System.out.println( "inOctet delta: " + inOctetDelta );
+		}
+
+		if( timeDelta != 0 && ifSpeed != 0 )
+		{
+			// Calculate the utilization.
+			utilization = ( double ) ( inOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
+			System.out.println( "The Octet counter 'wrapped'." );
+		}
+		else
+		{
+			utilization = 0.0;
+		}
+		System.out.println( "utilization: " + utilization );
+
+		return "Here is what we got...\n" + utilization.toString();
+	}
+
+
 	@Override
 	public void start( Stage primaryStage ) throws Exception
 	{
@@ -330,32 +394,25 @@ public class Main extends Application
 				// Check that FindInterfaces did not return a null.
 				if( ifContainer != null )
 				{
-					if( DEBUG )
-					{
-						// Test code to see what is in 'ifContainer'.
-						for( SNMPInterface test : ifContainer )
-						{
-							System.out.println( "File data: " + test.toString() );
-						}
-					}
-
 					// Find all SNMP interfaces in those SNMP walks.
 					ObservableList< SNMPInterface > ObservableIfContainer = FindInterfaces( inAL1, inAL2 );
 
 					// Populate our ListView with content from the interfaces.
 					interfaceTableView.setItems( ObservableIfContainer );
 				}
-				interfaceTableView.setOnMousePressed( new EventHandler< MouseEvent >()
-				{
-					@Override
-					public void handle( MouseEvent event )
+				interfaceTableView.setOnMousePressed( event -> {
+					if( event.isPrimaryButtonDown() )
 					{
-						if( event.isPrimaryButtonDown() )
-						{
-//							System.out.println( interfaceTableView.getSelectionModel().getSelectedItem() );
-							System.out.println( BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
-							System.out.println( BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
-						}
+//						System.out.println( interfaceTableView.getSelectionModel().getSelectedItem() );
+//						System.out.println( BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
+						SNMPInterface interface1 = BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
+//						System.out.println( BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
+						SNMPInterface interface2 = BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
+
+						// Populate our ListView with the return.
+						ObservableList< String > CalculatedUtilization = FXCollections.observableArrayList();
+						CalculatedUtilization.add( CalculateUtilization( interface1, interface2 ) );
+						ifListView.setItems( CalculatedUtilization );
 					}
 				} );
 			}
