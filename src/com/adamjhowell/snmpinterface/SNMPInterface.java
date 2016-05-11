@@ -10,21 +10,23 @@ import javafx.beans.property.SimpleStringProperty;
  */
 public class SNMPInterface
 {
-	private final SimpleStringProperty ifIndex;
+	private long ifIndex;
 	private final SimpleStringProperty ifDescr;
-	private int ifSpeed;
-	private int ifInOctets;
-	private int ifInDiscards;
-	private int ifInErrors;
-	private int ifOutOctets;
-	private int ifOutDiscards;
-	private int ifOutErrors;
+	private long sysUpTime;
+	private long ifSpeed;
+	private long ifInOctets;
+	private long ifInDiscards;
+	private long ifInErrors;
+	private long ifOutOctets;
+	private long ifOutDiscards;
+	private long ifOutErrors;
 
 
-	SNMPInterface( String ifDescr, String ifIndex, int ifSpeed, int ifInOctets, int ifInDiscards, int ifInErrors, int ifOutOctets, int ifOutDiscards, int ifOutErrors )
+	SNMPInterface( long ifIndex, String ifDescr, long sysUpTime, long ifSpeed, long ifInOctets, long ifInDiscards, long ifInErrors, long ifOutOctets, long ifOutDiscards, long ifOutErrors )
 	{
-		this.ifIndex = new SimpleStringProperty( ifIndex );
+		this.ifIndex = ifIndex;
 		this.ifDescr = new SimpleStringProperty( ifDescr );
+		this.sysUpTime = sysUpTime;
 		this.ifSpeed = ifSpeed;
 		this.ifInOctets = ifInOctets;
 		this.ifInDiscards = ifInDiscards;
@@ -35,22 +37,22 @@ public class SNMPInterface
 	}
 
 
-	SNMPInterface( String ifIndex, String ifDescr )
+	SNMPInterface( long ifIndex, String ifDescr )
 	{
-		this.ifIndex = new SimpleStringProperty( ifIndex );
+		this.ifIndex = ifIndex;
 		this.ifDescr = new SimpleStringProperty( ifDescr );
 	}
 
 
-	public String getIfIndex()
+	public long getIfIndex()
 	{
-		return ifIndex.get();
+		return ifIndex;
 	}
 
 
-	public void setIfIndex( String Index )
+	public void setIfIndex( long Index )
 	{
-		ifIndex.set( Index );
+		ifIndex = Index;
 	}
 
 
@@ -63,6 +65,102 @@ public class SNMPInterface
 	public void setIfDescr( String Descr )
 	{
 		ifDescr.set( Descr );
+	}
+
+
+	public long getSysUpTime()
+	{
+		return sysUpTime;
+	}
+
+
+	public long getIfSpeed()
+	{
+		return ifSpeed;
+	}
+
+
+	public long getIfInOctets()
+	{
+		return ifInOctets;
+	}
+
+
+	public long getIfInDiscards()
+	{
+		return ifInDiscards;
+	}
+
+
+	public long getIfInErrors()
+	{
+		return ifInErrors;
+	}
+
+
+	public long getIfOutOctets()
+	{
+		return ifOutOctets;
+	}
+
+
+	public long getIfOutDiscards()
+	{
+		return ifOutDiscards;
+	}
+
+
+	public long getIfOutErrors()
+	{
+		return ifOutErrors;
+	}
+
+
+	public void setSysUpTime( long sysUpTime )
+	{
+		this.sysUpTime = sysUpTime;
+	}
+
+
+	public void setIfSpeed( long ifSpeed )
+	{
+		this.ifSpeed = ifSpeed;
+	}
+
+
+	public void setIfInOctets( long ifInOctets )
+	{
+		this.ifInOctets = ifInOctets;
+	}
+
+
+	public void setIfInDiscards( long ifInDiscards )
+	{
+		this.ifInDiscards = ifInDiscards;
+	}
+
+
+	public void setIfInErrors( long ifInErrors )
+	{
+		this.ifInErrors = ifInErrors;
+	}
+
+
+	public void setIfOutOctets( long ifOutOctets )
+	{
+		this.ifOutOctets = ifOutOctets;
+	}
+
+
+	public void setIfOutDiscards( long ifOutDiscards )
+	{
+		this.ifOutDiscards = ifOutDiscards;
+	}
+
+
+	public void setIfOutErrors( long ifOutErrors )
+	{
+		this.ifOutErrors = ifOutErrors;
 	}
 
 

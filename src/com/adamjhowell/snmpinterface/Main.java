@@ -4,12 +4,14 @@ package com.adamjhowell.snmpinterface;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
@@ -62,11 +64,22 @@ public class Main extends Application
 	private TableView< SNMPInterface > interfaceTableView = new TableView<>();
 	private final ObservableList< SNMPInterface > interfaceData =
 		FXCollections.observableArrayList(
-			new SNMPInterface( "99", "test" ),
-			new SNMPInterface( "98", "data" ),
-			new SNMPInterface( "97", "press" ),
-			new SNMPInterface( "96", "button" )
+			new SNMPInterface( 99, "test data" ),
+			new SNMPInterface( 97, "press" ),
+			new SNMPInterface( 96, "Show Interfaces" )
 		);
+
+	// This section can be modified to suit SNMP walks that use names instead of numbers.
+	private final static String SYS_UPTIME_OID = ".1.3.6.1.2.1.1.3.0";               // The OID for sysUpTime (System UpTime)
+	//	private final static String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";          // The OID for ifIndex (Interface Index)
+	private final static String IF_DESCRIPTION_OID = ".1.3.6.1.2.1.2.2.1.2.";          // The OID for ifDescr (Interface Description)
+	private final static String IF_SPEED_OID = ".1.3.6.1.2.1.2.2.1.5.";          // The OID for ifSpeed (Interface Speed)
+	private final static String IF_IN_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.10.";          // The OID for ifInOctets (Interface Inbound Octet Count)
+	private final static String IF_IN_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.13.";     // The OID for ifInDiscards (Interface Inbound Discards)
+	private final static String IF_IN_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.14.";          // The OID for ifInErrors (Interface Inbound Errors)
+	private final static String IF_OUT_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.16.";     // The OID for ifOutOctets (Interface Outbound Octet Count)
+	private final static String IF_OUT_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.19.";     // The OID for ifOutDiscards (Interface Outbound Discards)
+	private final static String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";     // The OID for ifOutErrors (Interface Outbound Errors)
 
 	private final static boolean DEBUG = false;
 
@@ -109,25 +122,24 @@ public class Main extends Application
 
 	private static ObservableList< SNMPInterface > FindInterfaces( List< String > walk1, List< String > walk2 )
 	{
-		String IfDescriptionOID = ".1.3.6.1.2.1.2.2.1.2.";
 		ObservableList< SNMPInterface > ifListAL = FXCollections.observableArrayList();
 		List< String > ifList1 = new ArrayList<>();
 		List< String > ifList2 = new ArrayList<>();
 
 		// Add every line with an interface description OID.
-		ifList1.addAll( walk1.stream().filter( line -> line.contains( IfDescriptionOID ) ).collect( Collectors.toList() ) );
-		ifList2.addAll( walk2.stream().filter( line -> line.contains( IfDescriptionOID ) ).collect( Collectors.toList() ) );
+		ifList1.addAll( walk1.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() ) );
+		ifList2.addAll( walk2.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() ) );
 
 		// If the two walks have the same interface description OIDs, we can proceed.
 		if( ifList1.equals( ifList2 ) )
 		{
 			// Populate our map.
-			ifList1.stream().filter( line -> line.startsWith( IfDescriptionOID ) ).forEach( line -> {
+			ifList1.stream().filter( line -> line.startsWith( IF_DESCRIPTION_OID ) ).forEach( line -> {
 				// The interface index will start at position 21 and end one position before the first equal sign.
 				// There may be rare cases where an OID will contain more than one equal sign.
-				String ifIndex = line.substring( 21, line.indexOf( " = " ) );
-				// The interface description will start after the equal sign, and go to the end of the line.
-				String ifDescr = line.substring( line.indexOf( " = " ) + 11 );
+				int ifIndex = Integer.parseInt( line.substring( 21, line.indexOf( " = " ) ) );
+				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
+				String ifDescr = line.substring( line.indexOf( " = " ) + 12, line.length() - 1 );
 
 				// Create a SNMPInterface class object from those values.
 				ifListAL.add( new SNMPInterface( ifIndex, ifDescr ) );
@@ -141,6 +153,107 @@ public class Main extends Application
 			System.out.println( "The SNMP walks appear to be from different machines.  This will prevent any calculations." );
 			return null;
 		}
+	}
+
+
+	private static SNMPInterface BuildCompleteSNMPInterface( List< String > walk1, long ifIndex )
+	{
+		long tempSysUpTime = 0;
+		String tempIfDescr = "";
+		long tempIfSpeed = 0;
+		long tempIfInOctets = 0;
+		long tempIfInDiscards = 0;
+		long tempIfInErrors = 0;
+		long tempIfOutOctets = 0;
+		long tempIfOutDiscards = 0;
+		long tempIfOutErrors = 0;
+
+		System.out.println( "I was passed: " + ifIndex );
+		for( String line : walk1 )
+		{
+			if( line.startsWith( SYS_UPTIME_OID ) )
+			{
+				System.out.println( "~" + line );
+				tempSysUpTime = Long.parseLong( line.substring( 32 ) );
+				if( DEBUG )
+				{
+					System.out.println( "Found a sysUpTime of " + tempSysUpTime );
+				}
+			}
+			else if( line.startsWith( IF_DESCRIPTION_OID + ifIndex ) )
+			{
+				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
+				tempIfDescr = line.substring( line.indexOf( " = " ) + 12, line.length() - 1 );
+				if( DEBUG )
+				{
+					System.out.println( "Found a ifDescr of " + tempIfDescr );
+				}
+			}
+			else if( line.startsWith( IF_SPEED_OID + ifIndex ) )
+			{
+				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
+				tempIfSpeed = Long.parseLong( line.substring( 34 ) );
+				if( DEBUG )
+				{
+					System.out.println( "Found a ifSpeed of " + tempIfSpeed );
+				}
+			}
+			else if( line.startsWith( IF_IN_OCTETS_OID + ifIndex ) )
+			{
+				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
+				tempIfInOctets = Long.parseLong( line.substring( 37 ) );
+				if( DEBUG )
+				{
+					System.out.println( "Found a ifInOctets of " + tempIfInOctets );
+				}
+			}
+			else if( line.startsWith( IF_IN_DISCARDS_OID + ifIndex ) )
+			{
+				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
+				tempIfInDiscards = Long.parseLong( line.substring( 37 ) );
+				if( DEBUG )
+				{
+					System.out.println( "Found a ifInDiscards of " + tempIfInDiscards );
+				}
+			}
+			else if( line.startsWith( IF_IN_ERRORS_OID + ifIndex ) )
+			{
+				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
+				tempIfInErrors = Long.parseLong( line.substring( 37 ) );
+				if( DEBUG )
+				{
+					System.out.println( "Found a ifInErrors of " + tempIfInErrors );
+				}
+			}
+			else if( line.startsWith( IF_OUT_OCTETS_OID + ifIndex ) )
+			{
+				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
+				tempIfOutOctets = Long.parseLong( line.substring( 37 ) );
+				if( DEBUG )
+				{
+					System.out.println( "Found a ifOutOctets of " + tempIfOutOctets );
+				}
+			}
+			else if( line.startsWith( IF_OUT_DISCARDS_OID + ifIndex ) )
+			{
+				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
+				tempIfOutDiscards = Long.parseLong( line.substring( 37 ) );
+				if( DEBUG )
+				{
+					System.out.println( "Found a ifOutDiscards of " + tempIfOutDiscards );
+				}
+			}
+			else if( line.startsWith( IF_OUT_ERRORS_OID + ifIndex ) )
+			{
+				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
+				tempIfOutErrors = Long.parseLong( line.substring( 37 ) );
+				if( DEBUG )
+				{
+					System.out.println( "Found a ifOutErrors of " + tempIfOutErrors );
+				}
+			}
+		}
+		return new SNMPInterface( ifIndex, tempIfDescr, tempSysUpTime, tempIfSpeed, tempIfInOctets, tempIfInDiscards, tempIfInErrors, tempIfOutOctets, tempIfOutDiscards, tempIfOutErrors );
 	}
 
 
@@ -171,9 +284,6 @@ public class Main extends Application
 		rootNode.add( ShowInterfaceButton, 0, 2 );
 		GridPane.setHalignment( ShowInterfaceButton, HPos.LEFT );
 
-//		ListView< String > ifListView = new ListView<>();
-//		rootNode.add( ifListView, 0, 3 );
-
 		// Add my table of SNMP Interfaces.
 		interfaceTableView.setEditable( true );
 
@@ -188,8 +298,13 @@ public class Main extends Application
 
 		// These next lines should populate the table with interfaceData, and add it to the stage, even if the button is not yet pressed.
 		interfaceTableView.setItems( interfaceData );
+		// http://stackoverflow.com/questions/21132692/java-unchecked-unchecked-generic-array-creation-for-varargs-parameter
 		interfaceTableView.getColumns().setAll( ifIndexCol, ifDescrCol );
-		rootNode.add( interfaceTableView, 0, 7, 2, 1 );
+		rootNode.add( interfaceTableView, 0, 3, 2, 1 );
+
+		// Create a ListView to show the stats for the selected interface.
+		ListView< String > ifListView = new ListView<>();
+		rootNode.add( ifListView, 0, 7, 2, 1 );
 
 		if( DEBUG )
 		{
@@ -230,6 +345,19 @@ public class Main extends Application
 					// Populate our ListView with content from the interfaces.
 					interfaceTableView.setItems( ObservableIfContainer );
 				}
+				interfaceTableView.setOnMousePressed( new EventHandler< MouseEvent >()
+				{
+					@Override
+					public void handle( MouseEvent event )
+					{
+						if( event.isPrimaryButtonDown() )
+						{
+//							System.out.println( interfaceTableView.getSelectionModel().getSelectedItem() );
+							System.out.println( BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
+							System.out.println( BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
+						}
+					}
+				} );
 			}
 			else
 			{

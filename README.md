@@ -1,6 +1,21 @@
 # JavaLinkUtilization
 My LinkUtilization program rewritten in Java
 
+
+ToDo:
+1. Generate two SNMPInterface class objects for the selected row (one for each walk).
+2. Calculate utilization for the selected row.
+3. Output the utilization to a ListView or other JavaFX text output object.
+4. Calculate other stats for the selected row.
+5. Output those other stats to the ListView or other JavaFX object.
+
+
+Done:
+Converted ifIndex to an integer.
+Add a handler for selecting a row in the table.
+
+
+Commit history:
 1 - Initial Commit
 
 2 - fixed the .gitignore file
