@@ -3,16 +3,21 @@ My LinkUtilization program rewritten in Java
 
 
 ToDo:
-1. Generate two SNMPInterface class objects for the selected row (one for each walk).
-2. Calculate utilization for the selected row.
-3. Output the utilization to a ListView or other JavaFX text output object.
-4. Calculate other stats for the selected row.
-5. Output those other stats to the ListView or other JavaFX object.
+- Add an option to save the output.
+- Change the ListView to a TableView, and separate the labels and data into their own columns.
 
 
 Done:
 Converted ifIndex to an integer.
 Add a handler for selecting a row in the table.
+Generate two SNMPInterface class objects for the selected row (one for each walk).
+Calculate utilization for the selected row.
+Output the utilization to a ListView or other JavaFX text output object.
+The ListView is cleared when the 'Show Interfaces' button is pressed.  This is useful when new walk files are chosen.
+Added two new buttons, styled with ellipses, that launch FileChooser windows and accept new input files.
+Added the ability for the input files to be in the wrong order.  My code will use the file with the shorter sysUpTime as the first file.
+Added outbound utilization and total utilization.  The total value seems to be slightly off.  I would like to get more SNMP walk files to test this further.
+Added other stats (discards, errors) for the selected row.
 
 
 Commit history:
@@ -50,3 +55,9 @@ I have removed the tutorial code from this project, and am now moving forward wi
 15 - I have modified my code to use an external class file.
 Next, I will convert the ifIndex from a String to an int, so it can be used later in the project.
 Once that is done, I will work on making the rows in my table selectable, and calculate the utilization for that selected SNMP interface.  That information will likely be displayed in a ListView.
+
+16 - I have the BuildCompleteSNMPInterface method created, and all of its required code in place.
+I now need to take those two objects, and calculate the utilization.
+
+17 - I have the utilization working now. It even accommodates counter 'wrap'.
+I now want to output other stats for the selected SNMPInterface, like discards and errors.

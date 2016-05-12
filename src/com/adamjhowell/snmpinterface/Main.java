@@ -11,6 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.BufferedReader;
@@ -254,78 +255,135 @@ public class Main extends Application
 	}
 
 
-	private static String CalculateUtilization( SNMPInterface walk1, SNMPInterface walk2 )
+	private static ObservableList CalculateUtilization( SNMPInterface walk1, SNMPInterface walk2 )
 	{
-		// The generic formula for utilization is: ( delta-octets * 8 * 10 ) / ( delta-seconds * ifSpeed )
+		// The generic formula for inUtilization is: ( delta-octets * 8 * 10 ) / ( delta-seconds * ifSpeed )
 		long timeDelta;
 		long ifSpeed;
 		long inOctetDelta;
-		Double utilization;
+		long outOctetDelta;
+		long inDiscardDelta;
+		long outDiscardDelta;
+		long inErrorDelta;
+		long outErrorDelta;
+		Double inUtilization;
+		Double outUtilization;
+		Double totalUtilization;
+		ObservableList< String > CalculatedStats = FXCollections.observableArrayList();
 
-		// Get the time delta.  The timestamps MUST be different for utilization to be meaningful.
-		if( walk1.getSysUpTime() != walk2.getSysUpTime() )
+		// Get the time delta.  The timestamps MUST be different for inUtilization to be meaningful.
+		if( walk1.getSysUpTime() < walk2.getSysUpTime() )
 		{
 			// Get the number of ticks between the two walks.  There are 100 ticks per second.
-			timeDelta = walk2.getSysUpTime() - walk1.getSysUpTime();
-			// Convert to seconds.
-			timeDelta /= 100;
-			if( DEBUG )
-			{
-				System.out.println( "Time delta was " + timeDelta + " seconds." );
-			}
+			timeDelta = ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100;
+			CalculatedStats.add( "Time delta: " + timeDelta + " seconds." );
 		}
 		else
 		{
-			return "SysUpTimes match: " + walk1.getSysUpTime() + ", " + walk2.getSysUpTime();
+			CalculatedStats.add( "SysUpTimes match: " + walk1.getSysUpTime() + ", " + walk2.getSysUpTime() );
+			return CalculatedStats;
 		}
 
-		// Get the ifSpeed.  These MUST match for the two interfaces.
+		// Get the ifSpeed.  These MUST match.
 		if( walk1.getIfSpeed() == walk2.getIfSpeed() )
 		{
 			ifSpeed = walk1.getIfSpeed();
-			if( DEBUG )
-			{
-				System.out.println( "ifSpeed matches and is " + ifSpeed );
-			}
+			CalculatedStats.add( "Interface speed: " + ifSpeed );
 		}
 		else
 		{
-			return "ifSpeed does not match!";
+			CalculatedStats.add( "ifSpeed does not match!" );
+			return CalculatedStats;
 		}
 
 		// Get the inOctet delta.
 		inOctetDelta = walk2.getIfInOctets() - walk1.getIfInOctets();
+		// If a 'counter wrap' occurred.
 		if( inOctetDelta < 0 )
 		{
-			inOctetDelta = walk2.getIfInOctets() + COUNTER32MAX - walk1.getIfInOctets();
-			System.out.println( "The Octet counter 'wrapped'." );
+			inOctetDelta += COUNTER32MAX;
 		}
-		if( !DEBUG )
-		{
-			System.out.println( "inOctet delta: " + inOctetDelta );
-		}
+		CalculatedStats.add( "Inbound Octet delta: " + inOctetDelta );
 
+		// Get the outOctet delta.
+		outOctetDelta = walk2.getIfOutOctets() - walk1.getIfOutOctets();
+		// If a 'counter wrap' occurred.
+		if( outOctetDelta < 0 )
+		{
+			outOctetDelta += COUNTER32MAX;
+		}
+		CalculatedStats.add( "Outbound Octet delta: " + outOctetDelta );
+
+		// Calculate inUtilization and outUtilization.  Avoid divide-by-zero errors.
 		if( timeDelta != 0 && ifSpeed != 0 )
 		{
-			// Calculate the utilization.
-			utilization = ( double ) ( inOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
-			System.out.println( "The Octet counter 'wrapped'." );
+			// Calculate the inUtilization.
+			inUtilization = ( double ) ( inOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
+			CalculatedStats.add( "Inbound Utilization: " + inUtilization.toString() );
+			outUtilization = ( double ) ( outOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
+			CalculatedStats.add( "Outbound Utilization: " + outUtilization );
 		}
 		else
 		{
-			utilization = 0.0;
+			CalculatedStats.add( "Unable to calculate inUtilization." );
+			CalculatedStats.add( "Divide by zero error." );
 		}
-		System.out.println( "utilization: " + utilization );
+		// Calculate total utilization.
+		if( timeDelta != 0 && ifSpeed != 0 )
+		{
+			totalUtilization = ( double ) ( ( ( inOctetDelta + outOctetDelta ) * 8 * 100 ) / ( timeDelta * ifSpeed ) / 2 );
+			CalculatedStats.add( "Total delta: " + ( inOctetDelta + outOctetDelta ) );
+			CalculatedStats.add( "Total Utilization: " + totalUtilization );
+		}
 
-		return "Here is what we got...\n" + utilization.toString();
+		// Calculate inbound discard delta.
+		inDiscardDelta = walk2.getIfInDiscards() - walk1.getIfInDiscards();
+		// If a 'counter wrap' occurred.
+		if( inDiscardDelta < 0 )
+		{
+			inDiscardDelta += COUNTER32MAX;
+		}
+		CalculatedStats.add( "Inbound discards: " + inDiscardDelta );
+
+		// Calculate outbound discard delta.
+		outDiscardDelta = walk2.getIfOutDiscards() - walk1.getIfOutDiscards();
+		// If a 'counter wrap' occurred.
+		if( outDiscardDelta < 0 )
+		{
+			outDiscardDelta += COUNTER32MAX;
+		}
+		CalculatedStats.add( "Outbound discards: " + outDiscardDelta );
+
+		// Calculate inbound error delta.
+		inErrorDelta = walk2.getIfInErrors() - walk1.getIfInErrors();
+		// If a 'counter wrap' occurred.
+		if( inErrorDelta < 0 )
+		{
+			inErrorDelta += COUNTER32MAX;
+		}
+		CalculatedStats.add( "Inbound errors: " + inErrorDelta );
+
+		// Calculate outbound error delta.
+		outErrorDelta = walk2.getIfOutErrors() - walk1.getIfOutErrors();
+		// If a 'counter wrap' occurred.
+		if( outErrorDelta < 0 )
+		{
+			outErrorDelta += COUNTER32MAX;
+		}
+		CalculatedStats.add( "Outbound errors: " + outErrorDelta );
+
+		//return "Link inUtilization for " + walk1.getIfDescr() + "\n" + inUtilization.toString();
+		return CalculatedStats;
 	}
 
 
 	@Override
 	public void start( Stage primaryStage ) throws Exception
 	{
+		// Create the stage and set the window title.
 		primaryStage.setTitle( "SNMP Link Utilization" );
 
+		// Create a GridPane that will hold all of the elements.
 		GridPane rootNode = new GridPane();
 		rootNode.setPadding( new Insets( 15 ) );
 		rootNode.setHgap( 5 );
@@ -334,22 +392,52 @@ public class Main extends Application
 
 		Scene primaryScene = new Scene( rootNode, 500, 600 );
 
+		// Create and add the label and TextField for the first file.
 		rootNode.add( new Label( "First walk file:" ), 0, 0 );
-		TextField firstValue = new TextField();
-		firstValue.setText( "walk1.txt" );
-		rootNode.add( firstValue, 1, 0 );
+		TextField firstFile = new TextField();
+		firstFile.setText( "walk1.txt" );
+		rootNode.add( firstFile, 1, 0 );
 
+		// Create and add a FileChooser button for the first walk.
+		Button firstWalkButton = new Button( "..." );
+		rootNode.add( firstWalkButton, 3, 0 );
+		firstWalkButton.setOnAction( e -> {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.setTitle( "Open first walk file" );
+			fileChooser.getExtensionFilters().addAll( new FileChooser.ExtensionFilter( "Text Files", "*.txt" ), new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
+			File selectedFile = fileChooser.showOpenDialog( primaryStage );
+			if( selectedFile != null )
+			{
+				firstFile.setText( selectedFile.getName() );
+			}
+		} );
+
+		// Create and add the label and TextField for the second file.
 		rootNode.add( new Label( "Second walk file:" ), 0, 1 );
-		TextField secondValue = new TextField();
-		secondValue.setText( "walk2.txt" );
-		rootNode.add( secondValue, 1, 1 );
+		TextField secondFile = new TextField();
+		secondFile.setText( "walk2.txt" );
+		rootNode.add( secondFile, 1, 1 );
+
+		// Create and add a FileChooser button for the second walk.
+		Button secondWalkButton = new Button( "..." );
+		rootNode.add( secondWalkButton, 3, 1 );
+		secondWalkButton.setOnAction( e -> {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.setTitle( "Open second walk file" );
+			fileChooser.getExtensionFilters().addAll( new FileChooser.ExtensionFilter( "Text Files", "*.txt" ), new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
+			File selectedFile = fileChooser.showOpenDialog( primaryStage );
+			if( selectedFile != null )
+			{
+				secondFile.setText( selectedFile.getName() );
+			}
+		} );
 
 		Button ShowInterfaceButton = new Button( "Show Interfaces" );
 		rootNode.add( ShowInterfaceButton, 0, 2 );
 		GridPane.setHalignment( ShowInterfaceButton, HPos.LEFT );
 
 		// Add my table of SNMP Interfaces.
-		interfaceTableView.setEditable( true );
+		interfaceTableView.setEditable( false );
 
 		// Create a column for the SNMP interface indices.
 		TableColumn< SNMPInterface, String > ifIndexCol = new TableColumn<>( "Index" );
@@ -364,26 +452,26 @@ public class Main extends Application
 		interfaceTableView.setItems( interfaceData );
 		// http://stackoverflow.com/questions/21132692/java-unchecked-unchecked-generic-array-creation-for-varargs-parameter
 		interfaceTableView.getColumns().setAll( ifIndexCol, ifDescrCol );
-		rootNode.add( interfaceTableView, 0, 3, 2, 1 );
+		rootNode.add( interfaceTableView, 0, 3, 4, 1 );
+
+		// I am intentionally not adding this to rootNode yet.
+		Label label = new Label( "Press the 'Show Interfaces' button above." );
+		// Populate our label to let the user know they can now get more information.
+		rootNode.add( label, 0, 7, 2, 1 );
 
 		// Create a ListView to show the stats for the selected interface.
 		ListView< String > ifListView = new ListView<>();
-		rootNode.add( ifListView, 0, 7, 2, 1 );
-
-		if( DEBUG )
-		{
-			// Test code to see what is in 'interfaceData'.
-			for( SNMPInterface test : interfaceData )
-			{
-				System.out.println( "Static data: " + test.toString() );
-			}
-		}
+		rootNode.add( ifListView, 0, 8, 4, 1 );
 
 		// Create an event handler for the show interface button.
 		ShowInterfaceButton.setOnAction( e -> {
 			// Read in each file and populate our ArrayLists.
-			List< String > inAL1 = ReadFile( firstValue.getText() );
-			List< String > inAL2 = ReadFile( secondValue.getText() );
+			List< String > inAL1 = ReadFile( firstFile.getText() );
+			List< String > inAL2 = ReadFile( secondFile.getText() );
+
+			label.setText( "Click on a row above for interface details." );
+
+			ifListView.setItems( null );
 
 			// Check that neither ReadFile returned a null.
 			if( inAL1 != null && inAL2 != null )
@@ -411,7 +499,19 @@ public class Main extends Application
 
 						// Populate our ListView with the return.
 						ObservableList< String > CalculatedUtilization = FXCollections.observableArrayList();
-						CalculatedUtilization.add( CalculateUtilization( interface1, interface2 ) );
+						if( interface1.getSysUpTime() < interface2.getSysUpTime() )
+						{
+							CalculatedUtilization = CalculateUtilization( interface1, interface2 );
+						}
+						else if( interface1.getSysUpTime() > interface2.getSysUpTime() )
+						{
+							CalculatedUtilization = CalculateUtilization( interface2, interface1 );
+						}
+						else
+						{
+							CalculatedUtilization.addAll( "Unable to calculate utilization:" );
+							CalculatedUtilization.addAll( "The time stamps on the two files are identical." );
+						}
 						ifListView.setItems( CalculatedUtilization );
 					}
 				} );
