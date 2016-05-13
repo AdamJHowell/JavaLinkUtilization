@@ -255,7 +255,7 @@ public class Main extends Application
 	}
 
 
-	private static ObservableList CalculateUtilization( SNMPInterface walk1, SNMPInterface walk2 )
+	private static ObservableList< String > CalculateStatistics( SNMPInterface walk1, SNMPInterface walk2 )
 	{
 		// The generic formula for inUtilization is: ( delta-octets * 8 * 10 ) / ( delta-seconds * ifSpeed )
 		long timeDelta;
@@ -270,19 +270,7 @@ public class Main extends Application
 		Double outUtilization;
 		Double totalUtilization;
 		ObservableList< String > CalculatedStats = FXCollections.observableArrayList();
-
-		// Get the time delta.  The timestamps MUST be different for inUtilization to be meaningful.
-		if( walk1.getSysUpTime() < walk2.getSysUpTime() )
-		{
-			// Get the number of ticks between the two walks.  There are 100 ticks per second.
-			timeDelta = ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100;
-			CalculatedStats.add( "Time delta: " + timeDelta + " seconds." );
-		}
-		else
-		{
-			CalculatedStats.add( "SysUpTimes match: " + walk1.getSysUpTime() + ", " + walk2.getSysUpTime() );
-			return CalculatedStats;
-		}
+		SNMPInterfaceDelta CalculatedStatistics = new SNMPInterfaceDelta( walk1, walk2 );
 
 		// Get the ifSpeed.  These MUST match.
 		if( walk1.getIfSpeed() == walk2.getIfSpeed() )
@@ -293,7 +281,23 @@ public class Main extends Application
 		else
 		{
 			CalculatedStats.add( "ifSpeed does not match!" );
-			return CalculatedStats;
+			//return CalculatedStats;
+			return null;
+		}
+
+		// Get the time delta.  The timestamps MUST be different for inUtilization to be meaningful.
+		if( walk1.getSysUpTime() < walk2.getSysUpTime() )
+		{
+			// Get the number of ticks between the two walks.  There are 100 ticks per second.
+			timeDelta = ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100;
+			CalculatedStatistics.setTimeDelta( ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 );
+			CalculatedStats.add( "Time delta: " + timeDelta + " seconds." );
+		}
+		else
+		{
+			CalculatedStats.add( "SysUpTimes match: " + walk1.getSysUpTime() + ", " + walk2.getSysUpTime() );
+			//return CalculatedStats;
+			return null;
 		}
 
 		// Get the inOctet delta.
@@ -304,6 +308,7 @@ public class Main extends Application
 			inOctetDelta += COUNTER32MAX;
 		}
 		CalculatedStats.add( "Inbound Octet delta: " + inOctetDelta );
+		CalculatedStatistics.setInOctetDelta( inOctetDelta );
 
 		// Get the outOctet delta.
 		outOctetDelta = walk2.getIfOutOctets() - walk1.getIfOutOctets();
@@ -313,6 +318,7 @@ public class Main extends Application
 			outOctetDelta += COUNTER32MAX;
 		}
 		CalculatedStats.add( "Outbound Octet delta: " + outOctetDelta );
+		CalculatedStatistics.setOutOctetDelta( outOctetDelta );
 
 		// Calculate inUtilization and outUtilization.  Avoid divide-by-zero errors.
 		if( timeDelta != 0 && ifSpeed != 0 )
@@ -320,11 +326,14 @@ public class Main extends Application
 			// Calculate the inUtilization.
 			inUtilization = ( double ) ( inOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
 			CalculatedStats.add( "Inbound Utilization: " + inUtilization.toString() );
+			CalculatedStatistics.setInUtilization( inUtilization );
 			outUtilization = ( double ) ( outOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
 			CalculatedStats.add( "Outbound Utilization: " + outUtilization );
+			CalculatedStatistics.setOutUtilization( outUtilization );
 		}
 		else
 		{
+			// This should never be reached because I check for invalid time stamps above.
 			CalculatedStats.add( "Unable to calculate inUtilization." );
 			CalculatedStats.add( "Divide by zero error." );
 		}
@@ -334,6 +343,8 @@ public class Main extends Application
 			totalUtilization = ( double ) ( ( ( inOctetDelta + outOctetDelta ) * 8 * 100 ) / ( timeDelta * ifSpeed ) / 2 );
 			CalculatedStats.add( "Total delta: " + ( inOctetDelta + outOctetDelta ) );
 			CalculatedStats.add( "Total Utilization: " + totalUtilization );
+			CalculatedStatistics.setTotalDelta( inOctetDelta + outOctetDelta );
+			CalculatedStatistics.setTotalUtilization( totalUtilization );
 		}
 
 		// Calculate inbound discard delta.
@@ -344,6 +355,7 @@ public class Main extends Application
 			inDiscardDelta += COUNTER32MAX;
 		}
 		CalculatedStats.add( "Inbound discards: " + inDiscardDelta );
+		CalculatedStatistics.setInDiscardDelta( inDiscardDelta );
 
 		// Calculate outbound discard delta.
 		outDiscardDelta = walk2.getIfOutDiscards() - walk1.getIfOutDiscards();
@@ -353,6 +365,7 @@ public class Main extends Application
 			outDiscardDelta += COUNTER32MAX;
 		}
 		CalculatedStats.add( "Outbound discards: " + outDiscardDelta );
+		CalculatedStatistics.setOutDiscardDelta( outDiscardDelta );
 
 		// Calculate inbound error delta.
 		inErrorDelta = walk2.getIfInErrors() - walk1.getIfInErrors();
@@ -362,6 +375,7 @@ public class Main extends Application
 			inErrorDelta += COUNTER32MAX;
 		}
 		CalculatedStats.add( "Inbound errors: " + inErrorDelta );
+		CalculatedStatistics.setInErrorDelta( inErrorDelta );
 
 		// Calculate outbound error delta.
 		outErrorDelta = walk2.getIfOutErrors() - walk1.getIfOutErrors();
@@ -371,6 +385,7 @@ public class Main extends Application
 			outErrorDelta += COUNTER32MAX;
 		}
 		CalculatedStats.add( "Outbound errors: " + outErrorDelta );
+		CalculatedStatistics.setOutErrorDelta( outErrorDelta );
 
 		//return "Link inUtilization for " + walk1.getIfDescr() + "\n" + inUtilization.toString();
 		return CalculatedStats;
@@ -403,6 +418,7 @@ public class Main extends Application
 		rootNode.add( firstWalkButton, 3, 0 );
 		firstWalkButton.setOnAction( e -> {
 			FileChooser fileChooser = new FileChooser();
+			fileChooser.setInitialDirectory( new File( System.getProperty( "user.dir" ) ) );
 			fileChooser.setTitle( "Open first walk file" );
 			fileChooser.getExtensionFilters().addAll( new FileChooser.ExtensionFilter( "Text Files", "*.txt" ), new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
 			File selectedFile = fileChooser.showOpenDialog( primaryStage );
@@ -423,6 +439,7 @@ public class Main extends Application
 		rootNode.add( secondWalkButton, 3, 1 );
 		secondWalkButton.setOnAction( e -> {
 			FileChooser fileChooser = new FileChooser();
+			fileChooser.setInitialDirectory( new File( System.getProperty( "user.dir" ) ) );
 			fileChooser.setTitle( "Open second walk file" );
 			fileChooser.getExtensionFilters().addAll( new FileChooser.ExtensionFilter( "Text Files", "*.txt" ), new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
 			File selectedFile = fileChooser.showOpenDialog( primaryStage );
@@ -501,17 +518,20 @@ public class Main extends Application
 						ObservableList< String > CalculatedUtilization = FXCollections.observableArrayList();
 						if( interface1.getSysUpTime() < interface2.getSysUpTime() )
 						{
-							CalculatedUtilization = CalculateUtilization( interface1, interface2 );
+							CalculatedUtilization = CalculateStatistics( interface1, interface2 );
+							//SNMPInterfaceDelta calculatedStats = CalculateStatistics( interface1, interface2 );
 						}
 						else if( interface1.getSysUpTime() > interface2.getSysUpTime() )
 						{
-							CalculatedUtilization = CalculateUtilization( interface2, interface1 );
+							CalculatedUtilization = CalculateStatistics( interface2, interface1 );
+							//SNMPInterfaceDelta calculatedStats = CalculateStatistics( interface2, interface1 );
 						}
 						else
 						{
 							CalculatedUtilization.addAll( "Unable to calculate utilization:" );
 							CalculatedUtilization.addAll( "The time stamps on the two files are identical." );
 						}
+						//CalculatedUtilization = calculatedStats.;
 						ifListView.setItems( CalculatedUtilization );
 					}
 				} );

@@ -4,6 +4,7 @@ My LinkUtilization program rewritten in Java
 
 ToDo:
 - Add an option to save the output.
+- Change CalculateStatistics to return an object, instead of a String.
 - Change the ListView to a TableView, and separate the labels and data into their own columns.
 
 
@@ -18,6 +19,7 @@ Added two new buttons, styled with ellipses, that launch FileChooser windows and
 Added the ability for the input files to be in the wrong order.  My code will use the file with the shorter sysUpTime as the first file.
 Added outbound utilization and total utilization.  The total value seems to be slightly off.  I would like to get more SNMP walk files to test this further.
 Added other stats (discards, errors) for the selected row.
+Changed FileChooser to default to the PWD.
 
 
 Commit history:
