@@ -87,9 +87,20 @@ public class Main extends Application
 	public static void main( String[] args )
 	{
 		launch( args );
-	}
+	} // End of main() method.
 
 
+	/**
+	 * ReadFile
+	 * Created by Adam Howell on 2016-05-04.
+	 * This method will take a String representing a file name, and attempt to open it.
+	 * If the file can be opened, every line within that file will be read into an ArrayList.
+	 * That ArrayList of lines will be returned to the calling method.
+	 * If the file cannot be opened, this method will return 'null'.
+	 *
+	 * @param inFileName a String representing a file to open.
+	 * @return an ArrayList containing every line from the opened file.
+	 */
 	private static List< String > ReadFile( String inFileName )
 	{
 		String line;
@@ -117,9 +128,20 @@ public class Main extends Application
 			ioe.getLocalizedMessage();
 		}
 		return null;
-	}
+	} // End of ReadFile() method.
 
 
+	/**
+	 * FindInterfaces
+	 * Created by Adam Howell on 2016-05-05.
+	 * This will create two ArrayLists and add every line that begins with a specific OID.
+	 * If those ArrayLists are identical, then it will find the ifIndex and ifDescr for each interface,
+	 * create a SNMPInterface class object from them, and return an ArrayList of those objects.
+	 *
+	 * @param walk1 the first walk to search through.
+	 * @param walk2 the second walk to search through.
+	 * @return an ObservableList of discovered interfaces.
+	 */
 	private static ObservableList< SNMPInterface > FindInterfaces( List< String > walk1, List< String > walk2 )
 	{
 		ObservableList< SNMPInterface > ifListAL = FXCollections.observableArrayList();
@@ -153,9 +175,19 @@ public class Main extends Application
 			System.out.println( "The SNMP walks appear to be from different machines.  This will prevent any calculations." );
 			return null;
 		}
-	}
+	} // End of FindInterfaces() method.
 
 
+	/**
+	 * BuildCompleteSNMPInterface
+	 * Created by Adam Howell on 2016-05-10.
+	 * This method will find all pertinent stats for a single SNMP Interface, and return an object containing that data.
+	 * The returned object will also contain the System UpTime from that walk.
+	 *
+	 * @param walk    an ArrayList containing every line from a SNMP walk file.
+	 * @param ifIndex the SNMP Interface Index to build.
+	 * @return a SNMPInterface class object that represents the details for the requested interface.
+	 */
 	private static SNMPInterface BuildCompleteSNMPInterface( List< String > walk, long ifIndex )
 	{
 		long tempSysUpTime = 0;
@@ -172,6 +204,7 @@ public class Main extends Application
 		{
 			if( line.startsWith( SYS_UPTIME_OID ) )
 			{
+				// The sysUptime value will start at offset 32 and go to the end of the line.
 				tempSysUpTime = Long.parseLong( line.substring( 32 ) );
 				if( DEBUG )
 				{
@@ -180,7 +213,7 @@ public class Main extends Application
 			}
 			else if( line.startsWith( IF_DESCRIPTION_OID + ifIndex ) )
 			{
-				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
+				// The interface description is in quotes, will start after 'STRING:', and go to the end of the line.
 				tempIfDescr = line.substring( line.indexOf( " = " ) + 12, line.length() - 1 );
 				if( DEBUG )
 				{
@@ -189,8 +222,8 @@ public class Main extends Application
 			}
 			else if( line.startsWith( IF_SPEED_OID + ifIndex ) )
 			{
-				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
-				tempIfSpeed = Long.parseLong( line.substring( 34 ) );
+				// The interface speed value will start after 'GAUGE32:', and go to the end of the line.
+				tempIfSpeed = Long.parseLong( line.substring( line.indexOf( " = " ) + 12 ) );
 				if( DEBUG )
 				{
 					System.out.println( "Found a ifSpeed of " + tempIfSpeed );
@@ -198,8 +231,8 @@ public class Main extends Application
 			}
 			else if( line.startsWith( IF_IN_OCTETS_OID + ifIndex ) )
 			{
-				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
-				tempIfInOctets = Long.parseLong( line.substring( 37 ) );
+				// The interface inbound octet count value will start after 'COUNTER32:', and go to the end of the line.
+				tempIfInOctets = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
 				if( DEBUG )
 				{
 					System.out.println( "Found a ifInOctets of " + tempIfInOctets );
@@ -207,8 +240,8 @@ public class Main extends Application
 			}
 			else if( line.startsWith( IF_IN_DISCARDS_OID + ifIndex ) )
 			{
-				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
-				tempIfInDiscards = Long.parseLong( line.substring( 37 ) );
+				// The interface inbound discard count value will start after 'COUNTER32:', and go to the end of the line.
+				tempIfInDiscards = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
 				if( DEBUG )
 				{
 					System.out.println( "Found a ifInDiscards of " + tempIfInDiscards );
@@ -216,8 +249,8 @@ public class Main extends Application
 			}
 			else if( line.startsWith( IF_IN_ERRORS_OID + ifIndex ) )
 			{
-				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
-				tempIfInErrors = Long.parseLong( line.substring( 37 ) );
+				// The interface inbound error count value will start after 'COUNTER32:', and go to the end of the line.
+				tempIfInErrors = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
 				if( DEBUG )
 				{
 					System.out.println( "Found a ifInErrors of " + tempIfInErrors );
@@ -225,8 +258,8 @@ public class Main extends Application
 			}
 			else if( line.startsWith( IF_OUT_OCTETS_OID + ifIndex ) )
 			{
-				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
-				tempIfOutOctets = Long.parseLong( line.substring( 37 ) );
+				// The interface outbound octet count value will start after 'COUNTER32:', and go to the end of the line.
+				tempIfOutOctets = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
 				if( DEBUG )
 				{
 					System.out.println( "Found a ifOutOctets of " + tempIfOutOctets );
@@ -234,8 +267,8 @@ public class Main extends Application
 			}
 			else if( line.startsWith( IF_OUT_DISCARDS_OID + ifIndex ) )
 			{
-				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
-				tempIfOutDiscards = Long.parseLong( line.substring( 37 ) );
+				// The interface outbound discard count value will start after 'COUNTER32:', and go to the end of the line.
+				tempIfOutDiscards = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
 				if( DEBUG )
 				{
 					System.out.println( "Found a ifOutDiscards of " + tempIfOutDiscards );
@@ -243,8 +276,8 @@ public class Main extends Application
 			}
 			else if( line.startsWith( IF_OUT_ERRORS_OID + ifIndex ) )
 			{
-				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
-				tempIfOutErrors = Long.parseLong( line.substring( 37 ) );
+				// The interface outbound error count value will start after 'COUNTER32:', and go to the end of the line.
+				tempIfOutErrors = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
 				if( DEBUG )
 				{
 					System.out.println( "Found a ifOutErrors of " + tempIfOutErrors );
@@ -252,13 +285,23 @@ public class Main extends Application
 			}
 		}
 		return new SNMPInterface( ifIndex, tempIfDescr, tempSysUpTime, tempIfSpeed, tempIfInOctets, tempIfInDiscards, tempIfInErrors, tempIfOutOctets, tempIfOutDiscards, tempIfOutErrors );
-	}
+	} // End of BuildCompleteSNMPInterface() method.
 
 
+	/**
+	 * CalculateStatistics
+	 * Created by Adam Howell on 2016-05-10.
+	 * This will analyze two data containers and produce human-readable output related to
+	 * the differences between those containers.
+	 *
+	 * @param walk1 the output from BuildCompleteSNMPInterface for the first walk.
+	 * @param walk2 the output from BuildCompleteSNMPInterface for the second walk.
+	 * @return an ObservableList containing all of the statistics for interface.
+	 */
 	private static ObservableList< String > CalculateStatistics( SNMPInterface walk1, SNMPInterface walk2 )
 	{
 		// The generic formula for inUtilization is: ( delta-octets * 8 * 10 ) / ( delta-seconds * ifSpeed )
-		long timeDelta;
+		double timeDelta;
 		long ifSpeed;
 		long inOctetDelta;
 		long outOctetDelta;
@@ -272,7 +315,7 @@ public class Main extends Application
 		ObservableList< String > CalculatedStats = FXCollections.observableArrayList();
 		SNMPInterfaceDelta CalculatedStatistics = new SNMPInterfaceDelta( walk1, walk2 );
 
-		// Get the ifSpeed.  These MUST match.
+		// Get the ifSpeed for each walk.  These MUST match.
 		if( walk1.getIfSpeed() == walk2.getIfSpeed() )
 		{
 			ifSpeed = walk1.getIfSpeed();
@@ -289,7 +332,7 @@ public class Main extends Application
 		if( walk1.getSysUpTime() < walk2.getSysUpTime() )
 		{
 			// Get the number of ticks between the two walks.  There are 100 ticks per second.
-			timeDelta = ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100;
+			timeDelta = ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100;
 			CalculatedStatistics.setTimeDelta( ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 );
 			CalculatedStats.add( "Time delta: " + timeDelta + " seconds." );
 		}
@@ -327,24 +370,32 @@ public class Main extends Application
 			inUtilization = ( double ) ( inOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
 			CalculatedStats.add( "Inbound Utilization: " + inUtilization.toString() );
 			CalculatedStatistics.setInUtilization( inUtilization );
+
+			// Calculate the outUtilization.
 			outUtilization = ( double ) ( outOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
 			CalculatedStats.add( "Outbound Utilization: " + outUtilization );
 			CalculatedStatistics.setOutUtilization( outUtilization );
-		}
-		else
-		{
-			// This should never be reached because I check for invalid time stamps above.
-			CalculatedStats.add( "Unable to calculate inUtilization." );
-			CalculatedStats.add( "Divide by zero error." );
-		}
-		// Calculate total utilization.
-		if( timeDelta != 0 && ifSpeed != 0 )
-		{
-			totalUtilization = ( double ) ( ( ( inOctetDelta + outOctetDelta ) * 8 * 100 ) / ( timeDelta * ifSpeed ) / 2 );
+
+			// Calculate the totalUtilization.
+			totalUtilization = ( ( ( inOctetDelta + outOctetDelta ) * 8 * 100 ) / ( timeDelta * ifSpeed ) / 2 );
 			CalculatedStats.add( "Total delta: " + ( inOctetDelta + outOctetDelta ) );
 			CalculatedStats.add( "Total Utilization: " + totalUtilization );
 			CalculatedStatistics.setTotalDelta( inOctetDelta + outOctetDelta );
 			CalculatedStatistics.setTotalUtilization( totalUtilization );
+		}
+		else
+		{
+			CalculatedStats.add( "Unable to calculate utilization..." );
+			if( timeDelta == 0 )
+			{
+				// This should never be reached because I check for invalid time stamps above.
+				CalculatedStats.add( "\t...no time has passed between walks." );
+			}
+			if( ifSpeed == 0 )
+			{
+				// This can only be reached if the interface speed is set to zero.
+				CalculatedStats.add( "\t...interface speed is zero." );
+			}
 		}
 
 		// Calculate inbound discard delta.
@@ -389,9 +440,17 @@ public class Main extends Application
 
 		//return "Link inUtilization for " + walk1.getIfDescr() + "\n" + inUtilization.toString();
 		return CalculatedStats;
-	}
+	} // End of CalculateStatistics() method.
 
 
+	/**
+	 * start
+	 * Created by Adam Howell on 2016-05-10.
+	 * This sets the stage and the scene for the program.
+	 *
+	 * @param primaryStage the stage on which all JavaFX elements will be placed.
+	 * @throws Exception
+	 */
 	@Override
 	public void start( Stage primaryStage ) throws Exception
 	{
@@ -508,10 +567,13 @@ public class Main extends Application
 				interfaceTableView.setOnMousePressed( event -> {
 					if( event.isPrimaryButtonDown() )
 					{
+						// Utilize the toString() method for the selected row.
 //						System.out.println( interfaceTableView.getSelectionModel().getSelectedItem() );
 //						System.out.println( BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
+						// Send the first walk and the selected ifIndex to BuildCompleteSNMPInterface.
 						SNMPInterface interface1 = BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
 //						System.out.println( BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
+						// Send the second walk and the selected ifIndex to BuildCompleteSNMPInterface.
 						SNMPInterface interface2 = BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
 
 						// Populate our ListView with the return.
@@ -553,5 +615,5 @@ public class Main extends Application
 
 		// Show the stage.
 		primaryStage.show();
-	}
+	} // End of start() method.
 }

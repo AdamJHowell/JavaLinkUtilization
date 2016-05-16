@@ -11,7 +11,7 @@ public class SNMPInterfaceDelta
 {
 	private SNMPInterface walk1;
 	private SNMPInterface walk2;
-	private long timeDelta;
+	private double timeDelta;
 	private long inOctetDelta;
 	private long outOctetDelta;
 	private long totalDelta;
@@ -90,7 +90,7 @@ public class SNMPInterfaceDelta
 	}
 
 
-	public long getTimeDelta()
+	public double getTimeDelta()
 	{
 		return timeDelta;
 	}

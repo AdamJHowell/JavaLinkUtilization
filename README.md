@@ -63,3 +63,14 @@ I now need to take those two objects, and calculate the utilization.
 
 17 - I have the utilization working now. It even accommodates counter 'wrap'.
 I now want to output other stats for the selected SNMPInterface, like discards and errors.
+
+18 - I have implemented most of the features that I want this program to be able to do.
+Additions to this commit:
+-The ListView is cleared when the 'Show Interfaces' button is pressed.  This is useful when new walk files are chosen.
+-Added two new buttons, styled with ellipses, that launch FileChooser windows and accept new input files.
+-Added the ability for the input files to be in the wrong order.  My code will use the file with the shorter sysUpTime as the first file.
+-Added outbound utilization and total utilization.  The total value seems to be slightly off.  I would like to get more SNMP walk files to test this further.
+-Added other stats (discards, errors) for the selected row.
+
+19 - I am partway through altering CalculateStatistics to return a <key, value> object instead of a list of strings. Currently, I have a SNMPInterfaceDelta class to represent the calculations. However, I do not know how to get this class object into an ObservableList.
+I am undecided on what container to use.  ObservableList is almost a requirement, but it will have to be <String, String>, or something like that.  I feel like that is not the proper way to do this, but I cannot come up with a logical reason for that feeling.   Perhaps I will just commit to <String, String>.
