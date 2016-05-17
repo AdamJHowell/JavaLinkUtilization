@@ -1,4 +1,4 @@
-package com.adamjhowell.snmpinterface;
+package com.adamjhowell.snmpinterface.model;
 
 
 /**
@@ -156,7 +156,7 @@ public class SNMPInterfaceDelta
 	}
 
 
-	SNMPInterfaceDelta( SNMPInterface walk1, SNMPInterface walk2 )
+	public SNMPInterfaceDelta( SNMPInterface walk1, SNMPInterface walk2 )
 	{
 		this.walk1 = walk1;
 		this.walk2 = walk2;

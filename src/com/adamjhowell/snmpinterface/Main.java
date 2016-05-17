@@ -1,15 +1,19 @@
 package com.adamjhowell.snmpinterface;
 
 
+import com.adamjhowell.snmpinterface.model.SNMPInterface;
+import com.adamjhowell.snmpinterface.model.SNMPInterfaceDelta;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -64,8 +68,8 @@ public class Main extends Application
 	private final ObservableList< SNMPInterface > interfaceData =
 		FXCollections.observableArrayList(
 			new SNMPInterface( 99, "test data" ),
-			new SNMPInterface( 97, "press" ),
-			new SNMPInterface( 96, "Show Interfaces" )
+			new SNMPInterface( 97, "press the" ),
+			new SNMPInterface( 96, "'Show Interfaces' button" )
 		);
 
 	// This section can be modified to suit SNMP walks that use names instead of numbers.
@@ -456,6 +460,7 @@ public class Main extends Application
 	{
 		// Create the stage and set the window title.
 		primaryStage.setTitle( "SNMP Link Utilization" );
+		primaryStage.getIcons().add( new Image( "file:resources/images/nic.png" ) );
 
 		// Create a GridPane that will hold all of the elements.
 		GridPane rootNode = new GridPane();
@@ -472,18 +477,16 @@ public class Main extends Application
 		firstFile.setText( "walk1.txt" );
 		rootNode.add( firstFile, 1, 0 );
 
-		// Create and add a FileChooser button for the first walk.
+		// Create a button to open the first walk file.
 		Button firstWalkButton = new Button( "..." );
+		// Add it to the GridPane.
 		rootNode.add( firstWalkButton, 3, 0 );
+		// Create a handler for the button that launches FileChooser.
 		firstWalkButton.setOnAction( e -> {
-			FileChooser fileChooser = new FileChooser();
-			fileChooser.setInitialDirectory( new File( System.getProperty( "user.dir" ) ) );
-			fileChooser.setTitle( "Open first walk file" );
-			fileChooser.getExtensionFilters().addAll( new FileChooser.ExtensionFilter( "Text Files", "*.txt" ), new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
-			File selectedFile = fileChooser.showOpenDialog( primaryStage );
-			if( selectedFile != null )
+			String fileName = OpenButton( "Open first walk file", primaryStage );
+			if( fileName != null )
 			{
-				firstFile.setText( selectedFile.getName() );
+				firstFile.setText( fileName );
 			}
 		} );
 
@@ -493,24 +496,25 @@ public class Main extends Application
 		secondFile.setText( "walk2.txt" );
 		rootNode.add( secondFile, 1, 1 );
 
-		// Create and add a FileChooser button for the second walk.
+		// Create a button to open the second walk file.
 		Button secondWalkButton = new Button( "..." );
+		// Add it to the GridPane.
 		rootNode.add( secondWalkButton, 3, 1 );
+		// Create a handler for the button that launches FileChooser.
 		secondWalkButton.setOnAction( e -> {
-			FileChooser fileChooser = new FileChooser();
-			fileChooser.setInitialDirectory( new File( System.getProperty( "user.dir" ) ) );
-			fileChooser.setTitle( "Open second walk file" );
-			fileChooser.getExtensionFilters().addAll( new FileChooser.ExtensionFilter( "Text Files", "*.txt" ), new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
-			File selectedFile = fileChooser.showOpenDialog( primaryStage );
-			if( selectedFile != null )
+			String fileName = OpenButton( "Open second walk file", primaryStage );
+			if( fileName != null )
 			{
-				secondFile.setText( selectedFile.getName() );
+				secondFile.setText( fileName );
 			}
 		} );
 
 		Button ShowInterfaceButton = new Button( "Show Interfaces" );
 		rootNode.add( ShowInterfaceButton, 0, 2 );
 		GridPane.setHalignment( ShowInterfaceButton, HPos.LEFT );
+
+		Label fileLabel = new Label( "" );
+		rootNode.add( fileLabel, 1, 2, 3, 1 );
 
 		// Add my table of SNMP Interfaces.
 		interfaceTableView.setEditable( false );
@@ -530,7 +534,7 @@ public class Main extends Application
 		interfaceTableView.getColumns().setAll( ifIndexCol, ifDescrCol );
 		rootNode.add( interfaceTableView, 0, 3, 4, 1 );
 
-		// I am intentionally not adding this to rootNode yet.
+		// Create a label to describe the ListView below.
 		Label label = new Label( "Press the 'Show Interfaces' button above." );
 		// Populate our label to let the user know they can now get more information.
 		rootNode.add( label, 0, 7, 2, 1 );
@@ -558,45 +562,54 @@ public class Main extends Application
 				// Check that FindInterfaces did not return a null.
 				if( ifContainer != null )
 				{
+					// Clear the file warning label.
+					fileLabel.setText( "" );
+
 					// Find all SNMP interfaces in those SNMP walks.
 					ObservableList< SNMPInterface > ObservableIfContainer = FindInterfaces( inAL1, inAL2 );
 
 					// Populate our ListView with content from the interfaces.
 					interfaceTableView.setItems( ObservableIfContainer );
-				}
-				interfaceTableView.setOnMousePressed( event -> {
-					if( event.isPrimaryButtonDown() )
-					{
-						// Utilize the toString() method for the selected row.
+					interfaceTableView.setOnMousePressed( event -> {
+						if( event.isPrimaryButtonDown() )
+						{
+							// Utilize the toString() method for the selected row.
 //						System.out.println( interfaceTableView.getSelectionModel().getSelectedItem() );
 //						System.out.println( BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
-						// Send the first walk and the selected ifIndex to BuildCompleteSNMPInterface.
-						SNMPInterface interface1 = BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
+							// Send the first walk and the selected ifIndex to BuildCompleteSNMPInterface.
+							SNMPInterface interface1 = BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
 //						System.out.println( BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
-						// Send the second walk and the selected ifIndex to BuildCompleteSNMPInterface.
-						SNMPInterface interface2 = BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
+							// Send the second walk and the selected ifIndex to BuildCompleteSNMPInterface.
+							SNMPInterface interface2 = BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
 
-						// Populate our ListView with the return.
-						ObservableList< String > CalculatedUtilization = FXCollections.observableArrayList();
-						if( interface1.getSysUpTime() < interface2.getSysUpTime() )
-						{
-							CalculatedUtilization = CalculateStatistics( interface1, interface2 );
-							//SNMPInterfaceDelta calculatedStats = CalculateStatistics( interface1, interface2 );
+							// Populate our ListView with the return.
+							ObservableList< String > CalculatedUtilization = FXCollections.observableArrayList();
+							if( interface1.getSysUpTime() < interface2.getSysUpTime() )
+							{
+								CalculatedUtilization = CalculateStatistics( interface1, interface2 );
+								//SNMPInterfaceDelta calculatedStats = CalculateStatistics( interface1, interface2 );
+							}
+							else if( interface1.getSysUpTime() > interface2.getSysUpTime() )
+							{
+								CalculatedUtilization = CalculateStatistics( interface2, interface1 );
+								//SNMPInterfaceDelta calculatedStats = CalculateStatistics( interface2, interface1 );
+							}
+							else
+							{
+								CalculatedUtilization.addAll( "Unable to calculate utilization:" );
+								CalculatedUtilization.addAll( "The time stamps on the two files are identical." );
+							}
+							//CalculatedUtilization = calculatedStats.;
+							ifListView.setItems( CalculatedUtilization );
 						}
-						else if( interface1.getSysUpTime() > interface2.getSysUpTime() )
-						{
-							CalculatedUtilization = CalculateStatistics( interface2, interface1 );
-							//SNMPInterfaceDelta calculatedStats = CalculateStatistics( interface2, interface1 );
-						}
-						else
-						{
-							CalculatedUtilization.addAll( "Unable to calculate utilization:" );
-							CalculatedUtilization.addAll( "The time stamps on the two files are identical." );
-						}
-						//CalculatedUtilization = calculatedStats.;
-						ifListView.setItems( CalculatedUtilization );
-					}
-				} );
+					} );
+				}
+				else
+				{
+					// Warn the user that the files are not usable, and clear the TableView.
+					fileLabel.setText( "Walk files are not compatible!" );
+					interfaceTableView.setItems( null );
+				}
 			}
 			else
 			{
@@ -616,4 +629,27 @@ public class Main extends Application
 		// Show the stage.
 		primaryStage.show();
 	} // End of start() method.
+
+
+	@FXML
+	private String OpenButton( String title, Stage stageName )
+	{
+		FileChooser fileChooser = new FileChooser();
+		// Set the FileChooser to use the PWD.
+		fileChooser.setInitialDirectory( new File( System.getProperty( "user.dir" ) ) );
+		// Set the title for the FileChooser window.
+		fileChooser.setTitle( title );
+		// Set the file selection filters available to the user.
+		fileChooser.getExtensionFilters().addAll( new FileChooser.ExtensionFilter( "Text Files", "*.txt" ), new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
+		File selectedFile = fileChooser.showOpenDialog( stageName );
+		if( selectedFile != null )
+		{
+			// Send the file name to the second TextField.
+			return selectedFile.getName();
+		}
+		else
+		{
+			return null;
+		}
+	}
 }

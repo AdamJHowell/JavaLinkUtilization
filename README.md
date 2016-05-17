@@ -4,25 +4,30 @@ My LinkUtilization program rewritten in Java
 
 ToDo:
 - Add an option to save the output.
-- Change CalculateStatistics to return an object, instead of a String.
+- Change CalculateStatistics to return an object, instead of an ObservableList of crude strings.
 - Change the ListView to a TableView, and separate the labels and data into their own columns.
+- Switch to a true FXML layout.
 
 
 Done:
-Converted ifIndex to an integer.
-Add a handler for selecting a row in the table.
-Generate two SNMPInterface class objects for the selected row (one for each walk).
-Calculate utilization for the selected row.
-Output the utilization to a ListView or other JavaFX text output object.
-The ListView is cleared when the 'Show Interfaces' button is pressed.  This is useful when new walk files are chosen.
-Added two new buttons, styled with ellipses, that launch FileChooser windows and accept new input files.
-Added the ability for the input files to be in the wrong order.  My code will use the file with the shorter sysUpTime as the first file.
-Added outbound utilization and total utilization.  The total value seems to be slightly off.  I would like to get more SNMP walk files to test this further.
-Added other stats (discards, errors) for the selected row.
-Changed FileChooser to default to the PWD.
+- Converted ifIndex to an integer.
+- Add a handler for selecting a row in the table.
+- Generate two SNMPInterface class objects for the selected row (one for each walk).
+- Calculate utilization for the selected row.
+- Output the utilization to a ListView or other JavaFX text output object.
+- The ListView is cleared when the 'Show Interfaces' button is pressed.  This is useful when new walk files are chosen.
+- Added two new buttons, styled with ellipses, that launch FileChooser windows and accept new input files.
+- Added the ability for the input files to be in the wrong order.  My code will use the file with the shorter sysUpTime as the first file.
+- Added outbound utilization and total utilization.  The total value seems to be slightly off.  I would like to get more SNMP walk files to test this further.
+- Added other stats (discards, errors) for the selected row.
+- Changed FileChooser to default to the PWD.
+- Added a Label to show a better error when the input files are from different machines.
+- Added an icon from https://www.iconfinder.com/
+- I have the FXML file nearly ready to use.  Presently, I am doing all layout in Java.
 
 
 Commit history:
+
 1 - Initial Commit
 
 2 - fixed the .gitignore file
@@ -74,3 +79,6 @@ Additions to this commit:
 
 19 - I am partway through altering CalculateStatistics to return a <key, value> object instead of a list of strings. Currently, I have a SNMPInterfaceDelta class to represent the calculations. However, I do not know how to get this class object into an ObservableList.
 I am undecided on what container to use.  ObservableList is almost a requirement, but it will have to be <String, String>, or something like that.  I feel like that is not the proper way to do this, but I cannot come up with a logical reason for that feeling.   Perhaps I will just commit to <String, String>.
+
+20 - I haven't made any major changes, but I have most of the comments complete.
+I think that I will ditch the SNMPInterfaceDelta class, and just return an ObservableList of <String, String>.

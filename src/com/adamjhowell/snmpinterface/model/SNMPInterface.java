@@ -1,4 +1,4 @@
-package com.adamjhowell.snmpinterface;
+package com.adamjhowell.snmpinterface.model;
 
 
 import javafx.beans.property.SimpleStringProperty;
@@ -22,7 +22,7 @@ public class SNMPInterface
 	private long ifOutErrors;
 
 
-	SNMPInterface( long ifIndex, String ifDescr, long sysUpTime, long ifSpeed, long ifInOctets, long ifInDiscards, long ifInErrors, long ifOutOctets, long ifOutDiscards, long ifOutErrors )
+	public SNMPInterface( long ifIndex, String ifDescr, long sysUpTime, long ifSpeed, long ifInOctets, long ifInDiscards, long ifInErrors, long ifOutOctets, long ifOutDiscards, long ifOutErrors )
 	{
 		this.ifIndex = ifIndex;
 		this.ifDescr = new SimpleStringProperty( ifDescr );
@@ -37,7 +37,7 @@ public class SNMPInterface
 	}
 
 
-	SNMPInterface( long ifIndex, String ifDescr )
+	public SNMPInterface( long ifIndex, String ifDescr )
 	{
 		this.ifIndex = ifIndex;
 		this.ifDescr = new SimpleStringProperty( ifDescr );
