@@ -58,11 +58,23 @@ import java.util.stream.Collectors;
  * COUNTER64MAX = 18446744073709551615;	     	// The maximum value a Counter64 can hold.
  * <p>
  * I will commonly use 'if' in my variable names to indicate the symbol refers to a SNMP Interface.
+ * SNMP OIDs research links:
+ *   https://snmp.cloudapps.cisco.com/Support/SNMP/do/BrowseOID.do
+ *   http://www.oid-info.com/
+ *   http://www.alvestrand.no/objectid/top.html
  */
 
 
 public class Main extends Application
 {
+	public TextField firstFile;
+	public TextField secondFile;
+	public Button openWalk2Button;
+	public Button showInterfacesButton;
+	public TableColumn ifIndexCol;
+	public TableColumn ifDescCol;
+	public Label fileLabel;
+	public GridPane rootNode;
 	// This table (interfaceTableView) and data (interfaceData) are my attempts to populate my own table.
 	private TableView< SNMPInterface > interfaceTableView = new TableView<>();
 	private final ObservableList< SNMPInterface > interfaceData =
@@ -73,17 +85,19 @@ public class Main extends Application
 		);
 
 	// This section can be modified to suit SNMP walks that use names instead of numbers.
-	private final static String SYS_UPTIME_OID = ".1.3.6.1.2.1.1.3.0";               // The OID for sysUpTime (System UpTime)
-	//	private final static String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";          // The OID for ifIndex (Interface Index)
-	private final static String IF_DESCRIPTION_OID = ".1.3.6.1.2.1.2.2.1.2.";          // The OID for ifDescr (Interface Description)
-	private final static String IF_SPEED_OID = ".1.3.6.1.2.1.2.2.1.5.";          // The OID for ifSpeed (Interface Speed)
-	private final static String IF_IN_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.10.";          // The OID for ifInOctets (Interface Inbound Octet Count)
-	private final static String IF_IN_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.13.";     // The OID for ifInDiscards (Interface Inbound Discards)
-	private final static String IF_IN_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.14.";          // The OID for ifInErrors (Interface Inbound Errors)
-	private final static String IF_OUT_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.16.";     // The OID for ifOutOctets (Interface Outbound Octet Count)
+//	private final static String SYS_DESCR = ".1.3.6.1.2.1.1.1.0";                   // The OID for sysDescr (System Description).  Quotes start at offset 29, value starts at offset 30.
+	private final static String SYS_UPTIME_OID = ".1.3.6.1.2.1.1.3.0";              // The OID for sysUpTime (System UpTime).  Value start at offset 32.
+	//	private final static String SYS_NAME = ".1.3.6.1.2.1.1.5.0";                    // The OID for sysName (System Name).  Quotes start at offset 29, name starts at offset 30.
+//	private final static String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";             // The OID for ifIndex (Interface Index)
+	private final static String IF_DESCRIPTION_OID = ".1.3.6.1.2.1.2.2.1.2.";       // The OID for ifDescr (Interface Description)
+	private final static String IF_SPEED_OID = ".1.3.6.1.2.1.2.2.1.5.";             // The OID for ifSpeed (Interface Speed)
+	private final static String IF_IN_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.10.";        // The OID for ifInOctets (Interface Inbound Octet Count)
+	private final static String IF_IN_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.13.";      // The OID for ifInDiscards (Interface Inbound Discards)
+	private final static String IF_IN_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.14.";        // The OID for ifInErrors (Interface Inbound Errors)
+	private final static String IF_OUT_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.16.";       // The OID for ifOutOctets (Interface Outbound Octet Count)
 	private final static String IF_OUT_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.19.";     // The OID for ifOutDiscards (Interface Outbound Discards)
-	private final static String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";     // The OID for ifOutErrors (Interface Outbound Errors)
-	private final static long COUNTER32MAX = 4294967295L;                         // The maximum value a Counter32 can hold.
+	private final static String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";       // The OID for ifOutErrors (Interface Outbound Errors)
+	private final static long COUNTER32MAX = 4294967295L;                           // The maximum value a Counter32 can hold.
 
 	private final static boolean DEBUG = false;
 
@@ -458,32 +472,35 @@ public class Main extends Application
 	@Override
 	public void start( Stage primaryStage ) throws Exception
 	{
+		// This line does not work yet.  It is an attempt to start using FXML for layout.
+		primaryStage.getClass().getResource( "view/RootLayout.fxml" );
 		// Create the stage and set the window title.
 		primaryStage.setTitle( "SNMP Link Utilization" );
 		primaryStage.getIcons().add( new Image( "file:resources/images/nic.png" ) );
 
 		// Create a GridPane that will hold all of the elements.
-		GridPane rootNode = new GridPane();
-		rootNode.setPadding( new Insets( 15 ) );
-		rootNode.setHgap( 5 );
-		rootNode.setVgap( 5 );
-		rootNode.setAlignment( Pos.CENTER );
+		GridPane rootGridPane = new GridPane();
+		rootGridPane.setPadding( new Insets( 15 ) );
+		rootGridPane.setHgap( 5 );
+		rootGridPane.setVgap( 5 );
+		rootGridPane.setAlignment( Pos.CENTER );
 
-		Scene primaryScene = new Scene( rootNode, 500, 600 );
+		// Set up the Scene, composed of the GridPane we just created.
+		Scene primaryScene = new Scene( rootGridPane, 500, 600 );
 
 		// Create and add the label and TextField for the first file.
-		rootNode.add( new Label( "First walk file:" ), 0, 0 );
+		rootGridPane.add( new Label( "First walk file:" ), 0, 0 );
 		TextField firstFile = new TextField();
 		firstFile.setText( "walk1.txt" );
-		rootNode.add( firstFile, 1, 0 );
+		rootGridPane.add( firstFile, 1, 0 );
 
 		// Create a button to open the first walk file.
 		Button firstWalkButton = new Button( "..." );
 		// Add it to the GridPane.
-		rootNode.add( firstWalkButton, 3, 0 );
+		rootGridPane.add( firstWalkButton, 3, 0 );
 		// Create a handler for the button that launches FileChooser.
 		firstWalkButton.setOnAction( e -> {
-			String fileName = OpenButton( "Open first walk file", primaryStage );
+			String fileName = OpenButtonHandler( "Open first walk file", primaryStage );
 			if( fileName != null )
 			{
 				firstFile.setText( fileName );
@@ -491,18 +508,18 @@ public class Main extends Application
 		} );
 
 		// Create and add the label and TextField for the second file.
-		rootNode.add( new Label( "Second walk file:" ), 0, 1 );
+		rootGridPane.add( new Label( "Second walk file:" ), 0, 1 );
 		TextField secondFile = new TextField();
 		secondFile.setText( "walk2.txt" );
-		rootNode.add( secondFile, 1, 1 );
+		rootGridPane.add( secondFile, 1, 1 );
 
 		// Create a button to open the second walk file.
 		Button secondWalkButton = new Button( "..." );
 		// Add it to the GridPane.
-		rootNode.add( secondWalkButton, 3, 1 );
+		rootGridPane.add( secondWalkButton, 3, 1 );
 		// Create a handler for the button that launches FileChooser.
 		secondWalkButton.setOnAction( e -> {
-			String fileName = OpenButton( "Open second walk file", primaryStage );
+			String fileName = OpenButtonHandler( "Open second walk file", primaryStage );
 			if( fileName != null )
 			{
 				secondFile.setText( fileName );
@@ -510,11 +527,11 @@ public class Main extends Application
 		} );
 
 		Button ShowInterfaceButton = new Button( "Show Interfaces" );
-		rootNode.add( ShowInterfaceButton, 0, 2 );
+		rootGridPane.add( ShowInterfaceButton, 0, 2 );
 		GridPane.setHalignment( ShowInterfaceButton, HPos.LEFT );
 
 		Label fileLabel = new Label( "" );
-		rootNode.add( fileLabel, 1, 2, 3, 1 );
+		rootGridPane.add( fileLabel, 1, 2, 3, 1 );
 
 		// Add my table of SNMP Interfaces.
 		interfaceTableView.setEditable( false );
@@ -532,16 +549,16 @@ public class Main extends Application
 		interfaceTableView.setItems( interfaceData );
 		// http://stackoverflow.com/questions/21132692/java-unchecked-unchecked-generic-array-creation-for-varargs-parameter
 		interfaceTableView.getColumns().setAll( ifIndexCol, ifDescrCol );
-		rootNode.add( interfaceTableView, 0, 3, 4, 1 );
+		rootGridPane.add( interfaceTableView, 0, 3, 4, 1 );
 
 		// Create a label to describe the ListView below.
 		Label label = new Label( "Press the 'Show Interfaces' button above." );
 		// Populate our label to let the user know they can now get more information.
-		rootNode.add( label, 0, 7, 2, 1 );
+		rootGridPane.add( label, 0, 7, 2, 1 );
 
 		// Create a ListView to show the stats for the selected interface.
 		ListView< String > ifListView = new ListView<>();
-		rootNode.add( ifListView, 0, 8, 4, 1 );
+		rootGridPane.add( ifListView, 0, 8, 4, 1 );
 
 		// Create an event handler for the show interface button.
 		ShowInterfaceButton.setOnAction( e -> {
@@ -632,7 +649,7 @@ public class Main extends Application
 
 
 	@FXML
-	private String OpenButton( String title, Stage stageName )
+	private String OpenButtonHandler( String title, Stage stageName )
 	{
 		FileChooser fileChooser = new FileChooser();
 		// Set the FileChooser to use the PWD.
