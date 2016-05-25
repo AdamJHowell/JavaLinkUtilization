@@ -4,8 +4,6 @@ My LinkUtilization program rewritten in Java
 
 ToDo:
 - Add an option to save the output.
-- Change CalculateStatistics to return an object, instead of an ObservableList of crude strings.
-- Change the ListView to a TableView, and separate the labels and data into their own columns.
 - Switch to a true FXML layout.
 
 
@@ -24,6 +22,7 @@ Done:
 - Added a Label to show a better error when the input files are from different machines.
 - Added an icon from https://www.iconfinder.com/
 - I have the FXML file nearly ready to use.  Presently, I am doing all layout in Java.
+- Changed the ListView to a TableView, and separated the labels and data into their own columns.
 
 
 Commit history:
