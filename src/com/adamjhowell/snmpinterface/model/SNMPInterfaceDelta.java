@@ -9,8 +9,6 @@ package com.adamjhowell.snmpinterface.model;
  */
 public class SNMPInterfaceDelta
 {
-	private SNMPInterface walk1;
-	private SNMPInterface walk2;
 	private double timeDelta;
 	private long inOctetDelta;
 	private long outOctetDelta;
@@ -24,75 +22,15 @@ public class SNMPInterfaceDelta
 	private long outErrorDelta;
 
 
-	public void setTimeDelta( long timeDelta )
-	{
-		this.timeDelta = timeDelta;
-	}
-
-
-	public void setInOctetDelta( long inOctetDelta )
-	{
-		this.inOctetDelta = inOctetDelta;
-	}
-
-
-	public void setOutOctetDelta( long outOctetDelta )
-	{
-		this.outOctetDelta = outOctetDelta;
-	}
-
-
-	public void setTotalDelta( long totalDelta )
-	{
-		this.totalDelta = totalDelta;
-	}
-
-
-	public void setInUtilization( double inUtilization )
-	{
-		this.inUtilization = inUtilization;
-	}
-
-
-	public void setOutUtilization( double outUtilization )
-	{
-		this.outUtilization = outUtilization;
-	}
-
-
-	public void setTotalUtilization( double totalUtilization )
-	{
-		this.totalUtilization = totalUtilization;
-	}
-
-
-	public void setInDiscardDelta( long inDiscardDelta )
-	{
-		this.inDiscardDelta = inDiscardDelta;
-	}
-
-
-	public void setOutDiscardDelta( long outDiscardDelta )
-	{
-		this.outDiscardDelta = outDiscardDelta;
-	}
-
-
-	public void setInErrorDelta( long inErrorDelta )
-	{
-		this.inErrorDelta = inErrorDelta;
-	}
-
-
-	public void setOutErrorDelta( long outErrorDelta )
-	{
-		this.outErrorDelta = outErrorDelta;
-	}
-
-
 	public double getTimeDelta()
 	{
 		return timeDelta;
+	}
+
+
+	public void setTimeDelta( long timeDelta )
+	{
+		this.timeDelta = timeDelta;
 	}
 
 
@@ -102,9 +40,21 @@ public class SNMPInterfaceDelta
 	}
 
 
+	public void setInOctetDelta( long inOctetDelta )
+	{
+		this.inOctetDelta = inOctetDelta;
+	}
+
+
 	public long getOutOctetDelta()
 	{
 		return outOctetDelta;
+	}
+
+
+	public void setOutOctetDelta( long outOctetDelta )
+	{
+		this.outOctetDelta = outOctetDelta;
 	}
 
 
@@ -114,9 +64,21 @@ public class SNMPInterfaceDelta
 	}
 
 
+	public void setTotalDelta( long totalDelta )
+	{
+		this.totalDelta = totalDelta;
+	}
+
+
 	public double getInUtilization()
 	{
 		return inUtilization;
+	}
+
+
+	public void setInUtilization( double inUtilization )
+	{
+		this.inUtilization = inUtilization;
 	}
 
 
@@ -126,9 +88,21 @@ public class SNMPInterfaceDelta
 	}
 
 
+	public void setOutUtilization( double outUtilization )
+	{
+		this.outUtilization = outUtilization;
+	}
+
+
 	public double getTotalUtilization()
 	{
 		return totalUtilization;
+	}
+
+
+	public void setTotalUtilization( double totalUtilization )
+	{
+		this.totalUtilization = totalUtilization;
 	}
 
 
@@ -138,9 +112,21 @@ public class SNMPInterfaceDelta
 	}
 
 
+	public void setInDiscardDelta( long inDiscardDelta )
+	{
+		this.inDiscardDelta = inDiscardDelta;
+	}
+
+
 	public long getOutDiscardDelta()
 	{
 		return outDiscardDelta;
+	}
+
+
+	public void setOutDiscardDelta( long outDiscardDelta )
+	{
+		this.outDiscardDelta = outDiscardDelta;
 	}
 
 
@@ -150,15 +136,20 @@ public class SNMPInterfaceDelta
 	}
 
 
+	public void setInErrorDelta( long inErrorDelta )
+	{
+		this.inErrorDelta = inErrorDelta;
+	}
+
+
 	public long getOutErrorDelta()
 	{
 		return outErrorDelta;
 	}
 
 
-	public SNMPInterfaceDelta( SNMPInterface walk1, SNMPInterface walk2 )
+	public void setOutErrorDelta( long outErrorDelta )
 	{
-		this.walk1 = walk1;
-		this.walk2 = walk2;
+		this.outErrorDelta = outErrorDelta;
 	}
 }

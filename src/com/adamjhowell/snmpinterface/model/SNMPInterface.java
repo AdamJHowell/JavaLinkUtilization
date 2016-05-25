@@ -10,8 +10,8 @@ import javafx.beans.property.SimpleStringProperty;
  */
 public class SNMPInterface
 {
-	private long ifIndex;
 	private final SimpleStringProperty ifDescr;
+	private long ifIndex;
 	private long sysUpTime;
 	private long ifSpeed;
 	private long ifInOctets;
@@ -44,6 +44,18 @@ public class SNMPInterface
 	}
 
 
+	public long getSysUpTime()
+	{
+		return sysUpTime;
+	}
+
+
+	public void setSysUpTime( long sysUpTime )
+	{
+		this.sysUpTime = sysUpTime;
+	}
+
+
 	public long getIfIndex()
 	{
 		return ifIndex;
@@ -68,57 +80,9 @@ public class SNMPInterface
 	}
 
 
-	public long getSysUpTime()
-	{
-		return sysUpTime;
-	}
-
-
 	public long getIfSpeed()
 	{
 		return ifSpeed;
-	}
-
-
-	public long getIfInOctets()
-	{
-		return ifInOctets;
-	}
-
-
-	public long getIfInDiscards()
-	{
-		return ifInDiscards;
-	}
-
-
-	public long getIfInErrors()
-	{
-		return ifInErrors;
-	}
-
-
-	public long getIfOutOctets()
-	{
-		return ifOutOctets;
-	}
-
-
-	public long getIfOutDiscards()
-	{
-		return ifOutDiscards;
-	}
-
-
-	public long getIfOutErrors()
-	{
-		return ifOutErrors;
-	}
-
-
-	public void setSysUpTime( long sysUpTime )
-	{
-		this.sysUpTime = sysUpTime;
 	}
 
 
@@ -128,9 +92,21 @@ public class SNMPInterface
 	}
 
 
+	public long getIfInOctets()
+	{
+		return ifInOctets;
+	}
+
+
 	public void setIfInOctets( long ifInOctets )
 	{
 		this.ifInOctets = ifInOctets;
+	}
+
+
+	public long getIfInDiscards()
+	{
+		return ifInDiscards;
 	}
 
 
@@ -140,9 +116,21 @@ public class SNMPInterface
 	}
 
 
+	public long getIfInErrors()
+	{
+		return ifInErrors;
+	}
+
+
 	public void setIfInErrors( long ifInErrors )
 	{
 		this.ifInErrors = ifInErrors;
+	}
+
+
+	public long getIfOutOctets()
+	{
+		return ifOutOctets;
 	}
 
 
@@ -152,9 +140,21 @@ public class SNMPInterface
 	}
 
 
+	public long getIfOutDiscards()
+	{
+		return ifOutDiscards;
+	}
+
+
 	public void setIfOutDiscards( long ifOutDiscards )
 	{
 		this.ifOutDiscards = ifOutDiscards;
+	}
+
+
+	public long getIfOutErrors()
+	{
+		return ifOutErrors;
 	}
 
 

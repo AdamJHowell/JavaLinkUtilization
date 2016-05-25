@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,31 +60,14 @@ import java.util.stream.Collectors;
  * <p>
  * I will commonly use 'if' in my variable names to indicate the symbol refers to a SNMP Interface.
  * SNMP OIDs research links:
- *   https://snmp.cloudapps.cisco.com/Support/SNMP/do/BrowseOID.do
- *   http://www.oid-info.com/
- *   http://www.alvestrand.no/objectid/top.html
+ * https://snmp.cloudapps.cisco.com/Support/SNMP/do/BrowseOID.do
+ * http://www.oid-info.com/
+ * http://www.alvestrand.no/objectid/top.html
  */
 
 
 public class Main extends Application
 {
-	public TextField firstFile;
-	public TextField secondFile;
-	public Button openWalk2Button;
-	public Button showInterfacesButton;
-	public TableColumn ifIndexCol;
-	public TableColumn ifDescCol;
-	public Label fileLabel;
-	public GridPane rootNode;
-	// This table (interfaceTableView) and data (interfaceData) are my attempts to populate my own table.
-	private TableView< SNMPInterface > interfaceTableView = new TableView<>();
-	private final ObservableList< SNMPInterface > interfaceData =
-		FXCollections.observableArrayList(
-			new SNMPInterface( 99, "test data" ),
-			new SNMPInterface( 97, "press the" ),
-			new SNMPInterface( 96, "'Show Interfaces' button" )
-		);
-
 	// This section can be modified to suit SNMP walks that use names instead of numbers.
 //	private final static String SYS_DESCR = ".1.3.6.1.2.1.1.1.0";                   // The OID for sysDescr (System Description).  Quotes start at offset 29, value starts at offset 30.
 	private final static String SYS_UPTIME_OID = ".1.3.6.1.2.1.1.3.0";              // The OID for sysUpTime (System UpTime).  Value start at offset 32.
@@ -98,8 +82,23 @@ public class Main extends Application
 	private final static String IF_OUT_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.19.";     // The OID for ifOutDiscards (Interface Outbound Discards)
 	private final static String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";       // The OID for ifOutErrors (Interface Outbound Errors)
 	private final static long COUNTER32MAX = 4294967295L;                           // The maximum value a Counter32 can hold.
-
 	private final static boolean DEBUG = false;
+	private final ObservableList< SNMPInterface > interfaceData =
+		FXCollections.observableArrayList(
+			new SNMPInterface( 99, "test data" ),
+			new SNMPInterface( 97, "press the" ),
+			new SNMPInterface( 96, "'Show Interfaces' button" )
+		);
+	public TextField firstFile;
+	public TextField secondFile;
+	public Button openWalk2Button;
+	public Button showInterfacesButton;
+	public TableColumn ifIndexCol;
+	public TableColumn ifDescCol;
+	public Label fileLabel;
+	public GridPane rootNode;
+	// This table (interfaceTableView) and data (interfaceData) are my attempts to populate my own table.
+	private TableView< SNMPInterface > interfaceTableView = new TableView<>();
 
 
 	public static void main( String[] args )
@@ -331,7 +330,7 @@ public class Main extends Application
 		Double outUtilization;
 		Double totalUtilization;
 		ObservableList< String > CalculatedStats = FXCollections.observableArrayList();
-		SNMPInterfaceDelta CalculatedStatistics = new SNMPInterfaceDelta( walk1, walk2 );
+		SNMPInterfaceDelta CalculatedStatistics = new SNMPInterfaceDelta();
 
 		// Get the ifSpeed for each walk.  These MUST match.
 		if( walk1.getIfSpeed() == walk2.getIfSpeed() )
@@ -356,7 +355,9 @@ public class Main extends Application
 		}
 		else
 		{
+			// We should not be able to reach this point, as checking is done in start() to avoid this situation.
 			CalculatedStats.add( "SysUpTimes match: " + walk1.getSysUpTime() + ", " + walk2.getSysUpTime() );
+			CalculatedStats.add( "This will make statistical analysis meaningless." );
 			//return CalculatedStats;
 			return null;
 		}
@@ -386,20 +387,26 @@ public class Main extends Application
 		{
 			// Calculate the inUtilization.
 			inUtilization = ( double ) ( inOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
-			CalculatedStats.add( "Inbound Utilization: " + inUtilization.toString() );
-			CalculatedStatistics.setInUtilization( inUtilization );
+			// Format the double to 3 decimal places.
+			Double inTruncatedDouble = new BigDecimal( inUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
+			CalculatedStats.add( "Inbound Utilization: " + inTruncatedDouble.toString() );
+			CalculatedStatistics.setInUtilization( inTruncatedDouble );
 
 			// Calculate the outUtilization.
 			outUtilization = ( double ) ( outOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
-			CalculatedStats.add( "Outbound Utilization: " + outUtilization );
-			CalculatedStatistics.setOutUtilization( outUtilization );
+			// Format the double to 3 decimal places.
+			Double outTruncatedDouble = new BigDecimal( outUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
+			CalculatedStats.add( "Outbound Utilization: " + outTruncatedDouble );
+			CalculatedStatistics.setOutUtilization( outTruncatedDouble );
 
 			// Calculate the totalUtilization.
 			totalUtilization = ( ( ( inOctetDelta + outOctetDelta ) * 8 * 100 ) / ( timeDelta * ifSpeed ) / 2 );
+			// Format the double to 3 decimal places.
+			Double totalTruncatedDouble = new BigDecimal( totalUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
 			CalculatedStats.add( "Total delta: " + ( inOctetDelta + outOctetDelta ) );
-			CalculatedStats.add( "Total Utilization: " + totalUtilization );
+			CalculatedStats.add( "Total Utilization: " + totalTruncatedDouble );
 			CalculatedStatistics.setTotalDelta( inOctetDelta + outOctetDelta );
-			CalculatedStatistics.setTotalUtilization( totalUtilization );
+			CalculatedStatistics.setTotalUtilization( totalTruncatedDouble );
 		}
 		else
 		{
