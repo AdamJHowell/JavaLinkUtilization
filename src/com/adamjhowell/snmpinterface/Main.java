@@ -176,15 +176,24 @@ public class Main extends Application
 		{
 			// Populate our map.
 			ifList1.stream().filter( line -> line.startsWith( IF_DESCRIPTION_OID ) ).forEach( line -> {
-				// The interface index will start at position 21 and end one position before the first equal sign.
-				// There may be rare cases where an OID will contain more than one equal sign.
-				// ToDo: Put this in a try block.
-				Long ifIndex = Long.parseLong( line.substring( 21, line.indexOf( " = " ) ) );
-				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
-				String ifDescr = line.substring( line.indexOf( " = " ) + 12, line.length() - 1 );
+				// Catch a NumberFormatException from parseLong(), if one occurs.
+				try
+				{
+					// The interface index will start at position 21 and end one position before the first equal sign.
+					// There may be rare cases where an OID will contain more than one equal sign.
+					Long ifIndex = Long.parseLong( line.substring( 21, line.indexOf( " = " ) ) );
+					// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
+					String ifDescr = line.substring( line.indexOf( " = " ) + 12, line.length() - 1 );
 
-				// Create a SNMPInterface class object from those values.
-				ifListAL.add( new SNMPInterface( ifIndex, ifDescr ) );
+					// Create a SNMPInterface class object from those values.
+					ifListAL.add( new SNMPInterface( ifIndex, ifDescr ) );
+				}
+				catch( NumberFormatException nfe )
+				{
+					System.out.println( "FindInterfaces failed to parseLong()!" );
+					nfe.getMessage();
+					nfe.printStackTrace();
+				}
 			} );
 
 			// Return the populated container.

@@ -81,3 +81,17 @@ I am undecided on what container to use.  ObservableList is almost a requirement
 
 20 - I haven't made any major changes, but I have most of the comments complete.
 I think that I will ditch the SNMPInterfaceDelta class, and just return an ObservableList of <String, String>.
+
+21 - Added an icon for the application.
+Moved some files into 'model' and 'view' subdirectories.
+I have nearly finished the FXML layout.
+
+22 - I've tinkered around with switching to FXML instead of Java layout. I still have not made the switch.
+
+23 - I've rounded the utilization output to 3 decimal places.
+
+24 - I finally have the stats displayed in a TableView.
+I think that I may have this program nearly finished.
+I still want to switch to true FXML, and to have the option to save the output.
+
+25 - Put the parseLong() in a try/catch block.
