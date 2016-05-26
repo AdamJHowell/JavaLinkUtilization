@@ -1,8 +1,8 @@
 package com.adamjhowell.snmpinterface;
 
 
+import com.adamjhowell.snmpinterface.model.InterfaceStats;
 import com.adamjhowell.snmpinterface.model.SNMPInterface;
-import com.adamjhowell.snmpinterface.model.SNMPInterfaceDelta;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -85,9 +85,9 @@ public class Main extends Application
 	private final static boolean DEBUG = false;
 	private final ObservableList< SNMPInterface > interfaceData =
 		FXCollections.observableArrayList(
-			new SNMPInterface( 99, "test data" ),
-			new SNMPInterface( 97, "press the" ),
-			new SNMPInterface( 96, "'Show Interfaces' button" )
+			new SNMPInterface( 99L, "test data" ),
+			new SNMPInterface( 97L, "press the" ),
+			new SNMPInterface( 96L, "'Show Interfaces' button" )
 		);
 	public TextField firstFile;
 	public TextField secondFile;
@@ -97,8 +97,10 @@ public class Main extends Application
 	public TableColumn ifDescCol;
 	public Label fileLabel;
 	public GridPane rootNode;
-	// This table (interfaceTableView) and data (interfaceData) are my attempts to populate my own table.
+	// This table (interfaceTableView) will show all discovered SNMP interfaces.
 	private TableView< SNMPInterface > interfaceTableView = new TableView<>();
+	// This TableView will show the stats for the selected interface.
+	private TableView< InterfaceStats > statisticTableView = new TableView<>();
 
 
 	public static void main( String[] args )
@@ -176,7 +178,8 @@ public class Main extends Application
 			ifList1.stream().filter( line -> line.startsWith( IF_DESCRIPTION_OID ) ).forEach( line -> {
 				// The interface index will start at position 21 and end one position before the first equal sign.
 				// There may be rare cases where an OID will contain more than one equal sign.
-				int ifIndex = Integer.parseInt( line.substring( 21, line.indexOf( " = " ) ) );
+				// ToDo: Put this in a try block.
+				Long ifIndex = Long.parseLong( line.substring( 21, line.indexOf( " = " ) ) );
 				// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
 				String ifDescr = line.substring( line.indexOf( " = " ) + 12, line.length() - 1 );
 
@@ -315,49 +318,44 @@ public class Main extends Application
 	 * @param walk2 the output from BuildCompleteSNMPInterface for the second walk.
 	 * @return an ObservableList containing all of the statistics for interface.
 	 */
-	private static ObservableList< String > CalculateStatistics( SNMPInterface walk1, SNMPInterface walk2 )
+	private static ObservableList< InterfaceStats > CalculateStatistics( SNMPInterface walk1, SNMPInterface walk2 )
 	{
 		// The generic formula for inUtilization is: ( delta-octets * 8 * 10 ) / ( delta-seconds * ifSpeed )
-		double timeDelta;
-		long ifSpeed;
-		long inOctetDelta;
-		long outOctetDelta;
-		long inDiscardDelta;
-		long outDiscardDelta;
-		long inErrorDelta;
-		long outErrorDelta;
+		Long inOctetDelta;
+		Long outOctetDelta;
+		Long totalOctetDelta;
+		Long inDiscardDelta;
+		Long outDiscardDelta;
+		Long inErrorDelta;
+		Long outErrorDelta;
 		Double inUtilization;
 		Double outUtilization;
 		Double totalUtilization;
-		ObservableList< String > CalculatedStats = FXCollections.observableArrayList();
-		SNMPInterfaceDelta CalculatedStatistics = new SNMPInterfaceDelta();
+		ObservableList< InterfaceStats > statsAL = FXCollections.observableArrayList();
 
 		// Get the ifSpeed for each walk.  These MUST match.
-		if( walk1.getIfSpeed() == walk2.getIfSpeed() )
+		if( walk1.getIfSpeed().equals( walk2.getIfSpeed() ) )
 		{
-			ifSpeed = walk1.getIfSpeed();
-			CalculatedStats.add( "Interface speed: " + ifSpeed );
+			statsAL.add( new InterfaceStats( "Interface Speed", walk1.getIfSpeed().toString() ) );
 		}
 		else
 		{
-			CalculatedStats.add( "ifSpeed does not match!" );
+			//CalculatedStats.add( "ifSpeed does not match!" );
 			//return CalculatedStats;
-			return null;
+			statsAL.add( new InterfaceStats( "Interface Speeds", "Do Not Match" ) );
+			return statsAL;
 		}
 
 		// Get the time delta.  The timestamps MUST be different for inUtilization to be meaningful.
 		if( walk1.getSysUpTime() < walk2.getSysUpTime() )
 		{
 			// Get the number of ticks between the two walks.  There are 100 ticks per second.
-			timeDelta = ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100;
-			CalculatedStatistics.setTimeDelta( ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 );
-			CalculatedStats.add( "Time delta: " + timeDelta + " seconds." );
+			statsAL.add( new InterfaceStats( "Time Delta", ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) + " seconds." ) );
 		}
 		else
 		{
 			// We should not be able to reach this point, as checking is done in start() to avoid this situation.
-			CalculatedStats.add( "SysUpTimes match: " + walk1.getSysUpTime() + ", " + walk2.getSysUpTime() );
-			CalculatedStats.add( "This will make statistical analysis meaningless." );
+			statsAL.add( new InterfaceStats( "Invalid data:", "SysUpTimes match" ) );
 			//return CalculatedStats;
 			return null;
 		}
@@ -369,8 +367,7 @@ public class Main extends Application
 		{
 			inOctetDelta += COUNTER32MAX;
 		}
-		CalculatedStats.add( "Inbound Octet delta: " + inOctetDelta );
-		CalculatedStatistics.setInOctetDelta( inOctetDelta );
+		statsAL.add( new InterfaceStats( "Inbound Octet Delta", inOctetDelta.toString() ) );
 
 		// Get the outOctet delta.
 		outOctetDelta = walk2.getIfOutOctets() - walk1.getIfOutOctets();
@@ -379,47 +376,43 @@ public class Main extends Application
 		{
 			outOctetDelta += COUNTER32MAX;
 		}
-		CalculatedStats.add( "Outbound Octet delta: " + outOctetDelta );
-		CalculatedStatistics.setOutOctetDelta( outOctetDelta );
+		statsAL.add( new InterfaceStats( "Outbound Octet Delta", outOctetDelta.toString() ) );
+		totalOctetDelta = inOctetDelta + outOctetDelta;
+		statsAL.add( new InterfaceStats( "Total Delta", ( totalOctetDelta.toString() ) ) );
 
 		// Calculate inUtilization and outUtilization.  Avoid divide-by-zero errors.
-		if( timeDelta != 0 && ifSpeed != 0 )
+		if( ( ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) != 0 && walk1.getIfSpeed() != 0 )
 		{
 			// Calculate the inUtilization.
-			inUtilization = ( double ) ( inOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
+			inUtilization = ( double ) ( inOctetDelta * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Format the double to 3 decimal places.
 			Double inTruncatedDouble = new BigDecimal( inUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
-			CalculatedStats.add( "Inbound Utilization: " + inTruncatedDouble.toString() );
-			CalculatedStatistics.setInUtilization( inTruncatedDouble );
+			statsAL.add( new InterfaceStats( "Inbound Utilization", inTruncatedDouble.toString() ) );
 
 			// Calculate the outUtilization.
-			outUtilization = ( double ) ( outOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed );
+			outUtilization = ( double ) ( outOctetDelta * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Format the double to 3 decimal places.
 			Double outTruncatedDouble = new BigDecimal( outUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
-			CalculatedStats.add( "Outbound Utilization: " + outTruncatedDouble );
-			CalculatedStatistics.setOutUtilization( outTruncatedDouble );
+			statsAL.add( new InterfaceStats( "Outbound Utilization", outTruncatedDouble.toString() ) );
 
 			// Calculate the totalUtilization.
-			totalUtilization = ( ( ( inOctetDelta + outOctetDelta ) * 8 * 100 ) / ( timeDelta * ifSpeed ) / 2 );
+			totalUtilization = ( ( ( totalOctetDelta ) * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() ) / 2 );
 			// Format the double to 3 decimal places.
 			Double totalTruncatedDouble = new BigDecimal( totalUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
-			CalculatedStats.add( "Total delta: " + ( inOctetDelta + outOctetDelta ) );
-			CalculatedStats.add( "Total Utilization: " + totalTruncatedDouble );
-			CalculatedStatistics.setTotalDelta( inOctetDelta + outOctetDelta );
-			CalculatedStatistics.setTotalUtilization( totalTruncatedDouble );
+			statsAL.add( new InterfaceStats( "Total Utilization", totalTruncatedDouble.toString() ) );
 		}
 		else
 		{
-			CalculatedStats.add( "Unable to calculate utilization..." );
-			if( timeDelta == 0 )
+			if( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) == 0 )
 			{
+
 				// This should never be reached because I check for invalid time stamps above.
-				CalculatedStats.add( "\t...no time has passed between walks." );
+				statsAL.add( new InterfaceStats( "Unable to calculate utilization", "no time has passed between walks" ) );
 			}
-			if( ifSpeed == 0 )
+			if( walk1.getIfSpeed() == 0 )
 			{
 				// This can only be reached if the interface speed is set to zero.
-				CalculatedStats.add( "\t...interface speed is zero." );
+				statsAL.add( new InterfaceStats( "Unable to calculate utilization", "interface speed is zero" ) );
 			}
 		}
 
@@ -430,8 +423,7 @@ public class Main extends Application
 		{
 			inDiscardDelta += COUNTER32MAX;
 		}
-		CalculatedStats.add( "Inbound discards: " + inDiscardDelta );
-		CalculatedStatistics.setInDiscardDelta( inDiscardDelta );
+		statsAL.add( new InterfaceStats( "Inbound Discards", inDiscardDelta.toString() ) );
 
 		// Calculate outbound discard delta.
 		outDiscardDelta = walk2.getIfOutDiscards() - walk1.getIfOutDiscards();
@@ -440,8 +432,7 @@ public class Main extends Application
 		{
 			outDiscardDelta += COUNTER32MAX;
 		}
-		CalculatedStats.add( "Outbound discards: " + outDiscardDelta );
-		CalculatedStatistics.setOutDiscardDelta( outDiscardDelta );
+		statsAL.add( new InterfaceStats( "Outbound Discards", outDiscardDelta.toString() ) );
 
 		// Calculate inbound error delta.
 		inErrorDelta = walk2.getIfInErrors() - walk1.getIfInErrors();
@@ -450,8 +441,7 @@ public class Main extends Application
 		{
 			inErrorDelta += COUNTER32MAX;
 		}
-		CalculatedStats.add( "Inbound errors: " + inErrorDelta );
-		CalculatedStatistics.setInErrorDelta( inErrorDelta );
+		statsAL.add( new InterfaceStats( "Inbound Errors", inErrorDelta.toString() ) );
 
 		// Calculate outbound error delta.
 		outErrorDelta = walk2.getIfOutErrors() - walk1.getIfOutErrors();
@@ -460,11 +450,10 @@ public class Main extends Application
 		{
 			outErrorDelta += COUNTER32MAX;
 		}
-		CalculatedStats.add( "Outbound errors: " + outErrorDelta );
-		CalculatedStatistics.setOutErrorDelta( outErrorDelta );
+		statsAL.add( new InterfaceStats( "Outbound Errors", outErrorDelta.toString() ) );
 
 		//return "Link inUtilization for " + walk1.getIfDescr() + "\n" + inUtilization.toString();
-		return CalculatedStats;
+		return statsAL;
 	} // End of CalculateStatistics() method.
 
 
@@ -540,8 +529,9 @@ public class Main extends Application
 		Label fileLabel = new Label( "" );
 		rootGridPane.add( fileLabel, 1, 2, 3, 1 );
 
-		// Add my table of SNMP Interfaces.
+		// Make the tables unmodifiable.
 		interfaceTableView.setEditable( false );
+		statisticTableView.setEditable( false );
 
 		// Create a column for the SNMP interface indices.
 		TableColumn< SNMPInterface, String > ifIndexCol = new TableColumn<>( "Index" );
@@ -550,12 +540,15 @@ public class Main extends Application
 		// Create a column for the SNMP interface descriptions.
 		TableColumn< SNMPInterface, String > ifDescrCol = new TableColumn<>( "Description" );
 		ifDescrCol.setCellValueFactory( new PropertyValueFactory<>( "ifDescr" ) );
+
+		// Set the interface description column width to 70%.
 		ifDescrCol.prefWidthProperty().bind( interfaceTableView.widthProperty().multiply( 0.7 ) );
 
 		// These next lines should populate the table with interfaceData, and add it to the stage, even if the button is not yet pressed.
 		interfaceTableView.setItems( interfaceData );
 		// http://stackoverflow.com/questions/21132692/java-unchecked-unchecked-generic-array-creation-for-varargs-parameter
 		interfaceTableView.getColumns().setAll( ifIndexCol, ifDescrCol );
+		// Put the SNMP interface TableView on the grid.
 		rootGridPane.add( interfaceTableView, 0, 3, 4, 1 );
 
 		// Create a label to describe the ListView below.
@@ -563,9 +556,23 @@ public class Main extends Application
 		// Populate our label to let the user know they can now get more information.
 		rootGridPane.add( label, 0, 7, 2, 1 );
 
-		// Create a ListView to show the stats for the selected interface.
-		ListView< String > ifListView = new ListView<>();
-		rootGridPane.add( ifListView, 0, 8, 4, 1 );
+		// Create a column for the output description.
+		TableColumn< InterfaceStats, String > statDescrCol = new TableColumn<>( "Description" );
+		statDescrCol.setCellValueFactory( new PropertyValueFactory<>( "description" ) );
+
+		// Create a column for the output value.
+		TableColumn< InterfaceStats, String > statValueCol = new TableColumn<>( "Value" );
+		statValueCol.setCellValueFactory( new PropertyValueFactory<>( "value" ) );
+
+		// Set each column widths to 50% and 40%.
+		statDescrCol.prefWidthProperty().bind( statisticTableView.widthProperty().multiply( 0.5 ) );
+		statValueCol.prefWidthProperty().bind( statisticTableView.widthProperty().multiply( 0.4 ) );
+
+		// Add the columns to the TableView.
+		statisticTableView.getColumns().setAll( statDescrCol, statValueCol );
+
+		// Put the stats TableView on the grid.
+		rootGridPane.add( statisticTableView, 0, 8, 4, 1 );
 
 		// Create an event handler for the show interface button.
 		ShowInterfaceButton.setOnAction( e -> {
@@ -575,22 +582,19 @@ public class Main extends Application
 
 			label.setText( "Click on a row above for interface details." );
 
-			ifListView.setItems( null );
+			statisticTableView.setItems( null );
 
 			// Check that neither ReadFile returned a null.
 			if( inAL1 != null && inAL2 != null )
 			{
 				// Create an ObservableList of SNMPInterface objects from those files.
-				ObservableList< SNMPInterface > ifContainer = FindInterfaces( inAL1, inAL2 );
+				ObservableList< SNMPInterface > ObservableIfContainer = FindInterfaces( inAL1, inAL2 );
 
 				// Check that FindInterfaces did not return a null.
-				if( ifContainer != null )
+				if( ObservableIfContainer != null )
 				{
 					// Clear the file warning label.
 					fileLabel.setText( "" );
-
-					// Find all SNMP interfaces in those SNMP walks.
-					ObservableList< SNMPInterface > ObservableIfContainer = FindInterfaces( inAL1, inAL2 );
 
 					// Populate our ListView with content from the interfaces.
 					interfaceTableView.setItems( ObservableIfContainer );
@@ -607,24 +611,21 @@ public class Main extends Application
 							SNMPInterface interface2 = BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
 
 							// Populate our ListView with the return.
-							ObservableList< String > CalculatedUtilization = FXCollections.observableArrayList();
+							ObservableList< InterfaceStats > CalculatedUtilization = FXCollections.observableArrayList();
 							if( interface1.getSysUpTime() < interface2.getSysUpTime() )
 							{
 								CalculatedUtilization = CalculateStatistics( interface1, interface2 );
-								//SNMPInterfaceDelta calculatedStats = CalculateStatistics( interface1, interface2 );
 							}
 							else if( interface1.getSysUpTime() > interface2.getSysUpTime() )
 							{
 								CalculatedUtilization = CalculateStatistics( interface2, interface1 );
-								//SNMPInterfaceDelta calculatedStats = CalculateStatistics( interface2, interface1 );
 							}
 							else
 							{
-								CalculatedUtilization.addAll( "Unable to calculate utilization:" );
-								CalculatedUtilization.addAll( "The time stamps on the two files are identical." );
+								CalculatedUtilization.addAll( new InterfaceStats( "Unable to calculate utilization", "The time stamps on the two files are identical" ) );
 							}
-							//CalculatedUtilization = calculatedStats.;
-							ifListView.setItems( CalculatedUtilization );
+							// Populate the TableView with our results.
+							statisticTableView.setItems( CalculatedUtilization );
 						}
 					} );
 				}
