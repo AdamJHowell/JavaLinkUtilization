@@ -72,49 +72,19 @@ import java.util.stream.Collectors;
 public class Main extends Application
 {
 	// This section can be modified to suit SNMP walks that use names instead of numbers.
-//	private final static String SYS_DESCR = ".1.3.6.1.2.1.1.1.0";                   // The OID for sysDescr (System Description).  Quotes start at offset 29, value starts at offset 30.
-	private final static String
-		SYS_UPTIME_OID =
-		".1.3.6.1.2.1.1.3.0";
-	// The OID for sysUpTime (System UpTime).  Value start at offset 32.
-	//	private final static String SYS_NAME = ".1.3.6.1.2.1.1.5.0";                    // The OID for sysName (System Name).  Quotes start at offset 29, name starts at offset 30.
-//	private final static String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";             // The OID for ifIndex (Interface Index)
-	private final static String
-		IF_DESCRIPTION_OID =
-		".1.3.6.1.2.1.2.2.1.2.";
-	// The OID for ifDescr (Interface Description)
-	private final static String
-		IF_SPEED_OID =
-		".1.3.6.1.2.1.2.2.1.5.";
-	// The OID for ifSpeed (Interface Speed)
-	private final static String
-		IF_IN_OCTETS_OID =
-		".1.3.6.1.2.1.2.2.1.10.";
-	// The OID for ifInOctets (Interface Inbound Octet Count)
-	private final static String
-		IF_IN_DISCARDS_OID =
-		".1.3.6.1.2.1.2.2.1.13.";
-	// The OID for ifInDiscards (Interface Inbound Discards)
-	private final static String
-		IF_IN_ERRORS_OID =
-		".1.3.6.1.2.1.2.2.1.14.";
-	// The OID for ifInErrors (Interface Inbound Errors)
-	private final static String
-		IF_OUT_OCTETS_OID =
-		".1.3.6.1.2.1.2.2.1.16.";
-	// The OID for ifOutOctets (Interface Outbound Octet Count)
-	private final static String
-		IF_OUT_DISCARDS_OID =
-		".1.3.6.1.2.1.2.2.1.19.";
-	// The OID for ifOutDiscards (Interface Outbound Discards)
-	private final static String
-		IF_OUT_ERRORS_OID =
-		".1.3.6.1.2.1.2.2.1.20.";
-	// The OID for ifOutErrors (Interface Outbound Errors)
-	private final static long
-		COUNTER32MAX =
-		4294967295L;
-	// The maximum value a Counter32 can hold.
+//	private final static String SYS_DESCR = ".1.3.6.1.2.1.1.1.0";
+	private final static String SYS_UPTIME_OID = ".1.3.6.1.2.1.1.3.0";
+	//	private final static String SYS_NAME = ".1.3.6.1.2.1.1.5.0";
+//	private final static String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";
+	private final static String IF_DESCRIPTION_OID = ".1.3.6.1.2.1.2.2.1.2.";
+	private final static String IF_SPEED_OID = ".1.3.6.1.2.1.2.2.1.5.";
+	private final static String IF_IN_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.10.";
+	private final static String IF_IN_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.13.";
+	private final static String IF_IN_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.14.";
+	private final static String IF_OUT_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.16.";
+	private final static String IF_OUT_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.19.";
+	private final static String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";
+	private final static long COUNTER32MAX = 4294967295L;
 	private final static boolean DEBUG = false;
 	// Logging
 	private static final Logger errorLogger = LoggerFactory.getLogger( Main.class );
@@ -628,7 +598,7 @@ public class Main extends Application
 		ifIndexCol.setCellValueFactory( new PropertyValueFactory<>( "ifIndex" ) );
 
 		// Create a column for the SNMP interface descriptions.
-		TableColumn< SNMPInterface, String > ifDescrCol = new TableColumn<>( "Description" );
+		TableColumn< SNMPInterface, String > ifDescrCol = new TableColumn<>( "Name" );
 		ifDescrCol.setCellValueFactory( new PropertyValueFactory<>( "ifDescr" ) );
 
 		// Set the interface description column width to 70%.
@@ -779,6 +749,14 @@ public class Main extends Application
 	} // End of start() method.
 
 
+	/**
+	 * OpenButtonHandler
+	 * This method will create a handler for the open file buttons.
+	 *
+	 * @param title     the title to put at the top of the FileChooser dialog window.
+	 * @param stageName the stage to open this dialog window over.
+	 * @return the file name chosen by FileChooser.
+	 */
 	@FXML
 	private String OpenButtonHandler( String title, Stage stageName )
 	{
@@ -802,9 +780,15 @@ public class Main extends Application
 			errorLogger.info( "Open file dialog was cancelled." );
 			return null;
 		}
-	}
+	} // End of OpenButtonHandler() method.
 
 
+	/**
+	 * SaveButtonHandler
+	 * This method will create a handler for the save file button.
+	 * @param CalculatedUtilization the object that we want to save.
+	 * @param stageName the stage to open this dialog window over.
+	 */
 	private void SaveButtonHandler( ObservableList< InterfaceStats > CalculatedUtilization, Stage stageName )
 	{
 		JSONObject stats = new JSONObject();
@@ -846,9 +830,13 @@ public class Main extends Application
 		{
 			errorLogger.info( "Save file dialog was cancelled." );
 		}
-	}
+	} // End of SaveButtonHandler() method.
 
 
+	/**
+	 * InvalidButtonAlert
+	 * This method will display an error dialog pop-up indicating that the button is not yet ready to use.
+	 */
 	private void InvalidButtonAlert()
 	{
 		errorLogger.error( "The save button was clicked before it was ready." );
@@ -859,5 +847,5 @@ public class Main extends Application
 		alert.setContentText( "Click on an interface first." );
 
 		alert.showAndWait();
-	}
+	} // End of InvalidButtonAlert() method.
 }

@@ -101,3 +101,7 @@ I still want to switch to true FXML, and to have the option to save the output.
 
 27 - Added totals for discards and errors.
 
+28 - Added option to save output.
+You will need JSON Simple in your classpath due to the save functionality.
+I also added SLF4J logging for most errors, warning, and even some informational level events.
+You will need SLF4J and JSON-Simple libraries in your classpath due to the logging functionality.  I used slf4j-api-1.7.21 and slf4j-jdk14-1.7.21
