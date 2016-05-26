@@ -3,7 +3,6 @@ My LinkUtilization program rewritten in Java
 
 
 ToDo:
-- Add an option to save the output.
 - Switch to a true FXML layout.
 
 
@@ -23,6 +22,8 @@ Done:
 - Added an icon from https://www.iconfinder.com/
 - I have the FXML file nearly ready to use.  Presently, I am doing all layout in Java.
 - Changed the ListView to a TableView, and separated the labels and data into their own columns.
+- Added an option to save the output in JSON formatted text.
+- Added SLF4J logging for most errors and some informational.
 
 
 Commit history:
@@ -95,3 +96,12 @@ I think that I may have this program nearly finished.
 I still want to switch to true FXML, and to have the option to save the output.
 
 25 - Put the parseLong() in a try/catch block.
+
+26 - Reordered the output. Minor cosmetic changes.
+
+27 - Added totals for discards and errors.
+
+28 - Added option to save output.
+You will need JSON Simple in your classpath due to the save functionality.
+I also added SLF4J logging for most errors, warning, and even some informational level events.
+You will need SLF4J and JSON-Simple libraries in your classpath due to the logging functionality.  I used slf4j-api-1.7.21 and slf4j-jdk14-1.7.21

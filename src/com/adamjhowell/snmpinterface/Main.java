@@ -17,11 +17,11 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +31,9 @@ import java.util.stream.Collectors;
 /**
  * This program will open two SNMP walk files, locate and display each interface, and allow the user to select a displayed interface.
  * When an interface is selected, the program will calculate the utilization of that interface from the values in each walk.
+ * <p>
+ * You will need SLF4J and JSON-Simple libraries in your classpath to build this project.  I used slf4j-api-1.7.21 and slf4j-jdk14-1.7.21
+ * You will also need JSON Simple in your classpath.
  * <p>
  * The OIDs in the input files are expected to be in numerical format.
  * If named identifiers are desired, please contact me, and we can discuss formatting.
@@ -69,26 +72,29 @@ import java.util.stream.Collectors;
 public class Main extends Application
 {
 	// This section can be modified to suit SNMP walks that use names instead of numbers.
-//	private final static String SYS_DESCR = ".1.3.6.1.2.1.1.1.0";                   // The OID for sysDescr (System Description).  Quotes start at offset 29, value starts at offset 30.
-	private final static String SYS_UPTIME_OID = ".1.3.6.1.2.1.1.3.0";              // The OID for sysUpTime (System UpTime).  Value start at offset 32.
-	//	private final static String SYS_NAME = ".1.3.6.1.2.1.1.5.0";                    // The OID for sysName (System Name).  Quotes start at offset 29, name starts at offset 30.
-//	private final static String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";             // The OID for ifIndex (Interface Index)
-	private final static String IF_DESCRIPTION_OID = ".1.3.6.1.2.1.2.2.1.2.";       // The OID for ifDescr (Interface Description)
-	private final static String IF_SPEED_OID = ".1.3.6.1.2.1.2.2.1.5.";             // The OID for ifSpeed (Interface Speed)
-	private final static String IF_IN_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.10.";        // The OID for ifInOctets (Interface Inbound Octet Count)
-	private final static String IF_IN_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.13.";      // The OID for ifInDiscards (Interface Inbound Discards)
-	private final static String IF_IN_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.14.";        // The OID for ifInErrors (Interface Inbound Errors)
-	private final static String IF_OUT_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.16.";       // The OID for ifOutOctets (Interface Outbound Octet Count)
-	private final static String IF_OUT_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.19.";     // The OID for ifOutDiscards (Interface Outbound Discards)
-	private final static String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";       // The OID for ifOutErrors (Interface Outbound Errors)
-	private final static long COUNTER32MAX = 4294967295L;                           // The maximum value a Counter32 can hold.
+//	private final static String SYS_DESCR = ".1.3.6.1.2.1.1.1.0";
+	private final static String SYS_UPTIME_OID = ".1.3.6.1.2.1.1.3.0";
+	//	private final static String SYS_NAME = ".1.3.6.1.2.1.1.5.0";
+//	private final static String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";
+	private final static String IF_DESCRIPTION_OID = ".1.3.6.1.2.1.2.2.1.2.";
+	private final static String IF_SPEED_OID = ".1.3.6.1.2.1.2.2.1.5.";
+	private final static String IF_IN_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.10.";
+	private final static String IF_IN_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.13.";
+	private final static String IF_IN_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.14.";
+	private final static String IF_OUT_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.16.";
+	private final static String IF_OUT_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.19.";
+	private final static String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";
+	private final static long COUNTER32MAX = 4294967295L;
 	private final static boolean DEBUG = false;
+	// Logging
+	private static final Logger errorLogger = LoggerFactory.getLogger( Main.class );
 	private final ObservableList< SNMPInterface > interfaceData =
 		FXCollections.observableArrayList(
 			new SNMPInterface( 42L, "Test data." ),
 			new SNMPInterface( 42L, "Press the..." ),
 			new SNMPInterface( 42L, "'Show Interfaces' button" )
 		);
+	// FXML symbols.
 	public TextField firstFile;
 	public TextField secondFile;
 	public Button openWalk2Button;
@@ -141,9 +147,14 @@ public class Main extends Application
 				}
 				return inAL;
 			}
+			else
+			{
+				errorLogger.error( "File error: input file does not exist!" );
+			}
 		}
 		catch( IOException ioe )
 		{
+			errorLogger.error( "Exception: IOError trying to read the input file!" );
 			ioe.getLocalizedMessage();
 		}
 		return null;
@@ -168,8 +179,12 @@ public class Main extends Application
 		List< String > ifList2 = new ArrayList<>();
 
 		// Add every line with an interface description OID.
-		ifList1.addAll( walk1.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() ) );
-		ifList2.addAll( walk2.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() ) );
+		ifList1.addAll( walk1.stream()
+			.filter( line -> line.contains( IF_DESCRIPTION_OID ) )
+			.collect( Collectors.toList() ) );
+		ifList2.addAll( walk2.stream()
+			.filter( line -> line.contains( IF_DESCRIPTION_OID ) )
+			.collect( Collectors.toList() ) );
 
 		// If the two walks have the same interface description OIDs, we can proceed.
 		if( ifList1.equals( ifList2 ) )
@@ -190,7 +205,7 @@ public class Main extends Application
 				}
 				catch( NumberFormatException nfe )
 				{
-					System.out.println( "FindInterfaces failed to parseLong()!" );
+					errorLogger.error( "Exception: NumberFormatException trying parseLong()!" );
 					nfe.getMessage();
 					nfe.printStackTrace();
 				}
@@ -201,7 +216,8 @@ public class Main extends Application
 		}
 		else
 		{
-			System.out.println( "The SNMP walks appear to be from different machines.  This will prevent any calculations." );
+			errorLogger.error(
+				"The SNMP walks appear to be from different machines.  This will prevent any calculations." );
 			return null;
 		}
 	} // End of FindInterfaces() method.
@@ -313,7 +329,16 @@ public class Main extends Application
 				}
 			}
 		}
-		return new SNMPInterface( ifIndex, tempIfDescr, tempSysUpTime, tempIfSpeed, tempIfInOctets, tempIfInDiscards, tempIfInErrors, tempIfOutOctets, tempIfOutDiscards, tempIfOutErrors );
+		return new SNMPInterface( ifIndex,
+			tempIfDescr,
+			tempSysUpTime,
+			tempIfSpeed,
+			tempIfInOctets,
+			tempIfInDiscards,
+			tempIfInErrors,
+			tempIfOutOctets,
+			tempIfOutDiscards,
+			tempIfOutErrors );
 	} // End of BuildCompleteSNMPInterface() method.
 
 
@@ -348,12 +373,14 @@ public class Main extends Application
 		if( walk1.getSysUpTime() < walk2.getSysUpTime() )
 		{
 			// Get the number of ticks between the two walks.  There are 100 ticks per second.
-			statsAL.add( new InterfaceStats( "Time Delta", ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) + " seconds." ) );
+			statsAL.add( new InterfaceStats( "Time Delta",
+				( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) + " seconds." ) );
 		}
 		else
 		{
 			// We should not be able to reach this point, as checking is done in start() to avoid this situation.
-			statsAL.add( new InterfaceStats( "Invalid data:", "SysUpTimes match" ) );
+			errorLogger.error( "Invalid data, SysUpTime values match, but should not!" );
+			statsAL.add( new InterfaceStats( "Invalid data:", "SysUpTime values match" ) );
 			//return CalculatedStats;
 			return null;
 		}
@@ -365,8 +392,7 @@ public class Main extends Application
 		}
 		else
 		{
-			//CalculatedStats.add( "ifSpeed does not match!" );
-			//return CalculatedStats;
+			errorLogger.error( "Invalid data, interface speeds do not match!" );
 			statsAL.add( new InterfaceStats( "Interface Speeds", "Do Not Match" ) );
 			return statsAL;
 		}
@@ -392,37 +418,52 @@ public class Main extends Application
 		statsAL.add( new InterfaceStats( "Total Delta", ( totalOctetDelta.toString() ) ) );
 
 		// Calculate inUtilization and outUtilization.  Avoid divide-by-zero errors.
-		if( ( ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) != 0 && walk1.getIfSpeed() != 0 )
+		if( ( walk2.getSysUpTime() - walk1.getSysUpTime() ) != 0 && walk1.getIfSpeed() != 0 )
 		{
 			// Calculate the inUtilization.
-			inUtilization = ( double ) ( inOctetDelta * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
+			inUtilization =
+				( double ) ( inOctetDelta * 8 * 100 ) /
+					( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Format the double to 3 decimal places.
-			Double inTruncatedDouble = new BigDecimal( inUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
+			Double
+				inTruncatedDouble =
+				new BigDecimal( inUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
 			statsAL.add( new InterfaceStats( "Inbound Utilization", inTruncatedDouble.toString() ) );
 
 			// Calculate the outUtilization.
-			outUtilization = ( double ) ( outOctetDelta * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
+			outUtilization =
+				( double ) ( outOctetDelta * 8 * 100 ) /
+					( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Format the double to 3 decimal places.
-			Double outTruncatedDouble = new BigDecimal( outUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
+			Double
+				outTruncatedDouble =
+				new BigDecimal( outUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
 			statsAL.add( new InterfaceStats( "Outbound Utilization", outTruncatedDouble.toString() ) );
 
 			// Calculate the totalUtilization.
-			totalUtilization = ( ( ( totalOctetDelta ) * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() ) / 2 );
+			totalUtilization =
+				( ( ( totalOctetDelta ) * 8 * 100 ) /
+					( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() ) /
+					2 );
 			// Format the double to 3 decimal places.
-			Double totalTruncatedDouble = new BigDecimal( totalUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
+			Double
+				totalTruncatedDouble =
+				new BigDecimal( totalUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
 			statsAL.add( new InterfaceStats( "Total Utilization", totalTruncatedDouble.toString() ) );
 		}
 		else
 		{
 			if( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) == 0 )
 			{
-
 				// This should never be reached because I check for invalid time stamps above.
-				statsAL.add( new InterfaceStats( "Unable to calculate utilization", "no time has passed between walks" ) );
+				errorLogger.error( "Invalid data, no time has passed between walks!" );
+				statsAL.add( new InterfaceStats( "Unable to calculate utilization",
+					"no time has passed between walks" ) );
 			}
 			if( walk1.getIfSpeed() == 0 )
 			{
 				// This can only be reached if the interface speed is set to zero.
+				errorLogger.warn( "Invalid data, interface speed is zero!" );
 				statsAL.add( new InterfaceStats( "Unable to calculate utilization", "interface speed is zero" ) );
 			}
 		}
@@ -447,7 +488,7 @@ public class Main extends Application
 
 		// Calculate total discard delta.
 		totalDiscardDelta = inDiscardDelta + outDiscardDelta;
-		statsAL.add(new InterfaceStats("Total Discards", totalDiscardDelta.toString()));
+		statsAL.add( new InterfaceStats( "Total Discards", totalDiscardDelta.toString() ) );
 
 		// Calculate inbound error delta.
 		inErrorDelta = walk2.getIfInErrors() - walk1.getIfInErrors();
@@ -469,7 +510,7 @@ public class Main extends Application
 
 		// Calculate total error delta.
 		totalErrorDelta = inErrorDelta + outErrorDelta;
-		statsAL.add(new InterfaceStats("Total Errors", totalErrorDelta.toString()));
+		statsAL.add( new InterfaceStats( "Total Errors", totalErrorDelta.toString() ) );
 
 		//return "Link inUtilization for " + walk1.getIfDescr() + "\n" + inUtilization.toString();
 		return statsAL;
@@ -557,7 +598,7 @@ public class Main extends Application
 		ifIndexCol.setCellValueFactory( new PropertyValueFactory<>( "ifIndex" ) );
 
 		// Create a column for the SNMP interface descriptions.
-		TableColumn< SNMPInterface, String > ifDescrCol = new TableColumn<>( "Description" );
+		TableColumn< SNMPInterface, String > ifDescrCol = new TableColumn<>( "Name" );
 		ifDescrCol.setCellValueFactory( new PropertyValueFactory<>( "ifDescr" ) );
 
 		// Set the interface description column width to 70%.
@@ -591,10 +632,22 @@ public class Main extends Application
 		statisticTableView.getColumns().setAll( statDescrCol, statValueCol );
 
 		// Put the stats TableView on the grid.
-		rootGridPane.add( statisticTableView, 0, 8, 4, 1 );
+		rootGridPane.add( statisticTableView, 0, 7, 4, 1 );
+
+		// Add a button to save the statistics output.
+		Button saveButton = new Button( "Save" );
+		// Set the button to disabled until an interface is clicked.
+		saveButton.setDisable( true );
+		// Add the button to the grid.
+		rootGridPane.add( saveButton, 0, 12 );
+		// Set the action for when it is clicked.
+		saveButton.setOnAction( e -> InvalidButtonAlert() );
 
 		// Create an event handler for the show interface button.
 		ShowInterfaceButton.setOnAction( e -> {
+			// Set the button to disabled (again), until an interface is clicked.
+			saveButton.setDisable( true );
+
 			// Read in each file and populate our ArrayLists.
 			List< String > inAL1 = ReadFile( firstFile.getText() );
 			List< String > inAL2 = ReadFile( secondFile.getText() );
@@ -617,20 +670,25 @@ public class Main extends Application
 
 					// Populate our ListView with content from the interfaces.
 					interfaceTableView.setItems( ObservableIfContainer );
+					// Add a mouse-click event for each row in the table.
 					interfaceTableView.setOnMousePressed( event -> {
 						if( event.isPrimaryButtonDown() )
 						{
-							// Utilize the toString() method for the selected row.
-//						System.out.println( interfaceTableView.getSelectionModel().getSelectedItem() );
-//						System.out.println( BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
 							// Send the first walk and the selected ifIndex to BuildCompleteSNMPInterface.
-							SNMPInterface interface1 = BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
-//						System.out.println( BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() ) );
+							SNMPInterface
+								interface1 =
+								BuildCompleteSNMPInterface( inAL1,
+									interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
 							// Send the second walk and the selected ifIndex to BuildCompleteSNMPInterface.
-							SNMPInterface interface2 = BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
+							SNMPInterface
+								interface2 =
+								BuildCompleteSNMPInterface( inAL2,
+									interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
 
 							// Populate our ListView with the return.
-							ObservableList< InterfaceStats > CalculatedUtilization = FXCollections.observableArrayList();
+							ObservableList< InterfaceStats >
+								CalculatedUtilization =
+								FXCollections.observableArrayList();
 							if( interface1.getSysUpTime() < interface2.getSysUpTime() )
 							{
 								CalculatedUtilization = CalculateStatistics( interface1, interface2 );
@@ -641,22 +699,38 @@ public class Main extends Application
 							}
 							else
 							{
-								CalculatedUtilization.addAll( new InterfaceStats( "Unable to calculate utilization", "The time stamps on the two files are identical" ) );
+								errorLogger.error(
+									"Invalid data, time stamps on the two walk files are identical!" );
+								errorLogger.error( "This happened in the statisticTableView event handler." );
+								CalculatedUtilization.addAll( new InterfaceStats(
+									"Unable to calculate utilization",
+									"The time stamps on the two files are identical" ) );
 							}
 							// Populate the TableView with our results.
 							statisticTableView.setItems( CalculatedUtilization );
+
+							// Enable the save button.
+							saveButton.setDisable( false );
+							final ObservableList< InterfaceStats >
+								finalCalculatedUtilization =
+								CalculatedUtilization;
+							// Save the stats to a file.
+							saveButton.setOnAction( clickEvent -> SaveButtonHandler( finalCalculatedUtilization,
+								primaryStage ) );
 						}
 					} );
 				}
 				else
 				{
 					// Warn the user that the files are not usable, and clear the TableView.
+					errorLogger.error( "Invalid data, input files are not compatible with each other!" );
 					fileLabel.setText( "Walk files are not compatible!" );
 					interfaceTableView.setItems( null );
 				}
 			}
 			else
 			{
+				errorLogger.error( "Invalid data, selected file does not exist!" );
 				// Create a pop-up alert to signal that a file name was invalid.
 				Alert alert = new Alert( Alert.AlertType.ERROR );
 				alert.setTitle( "File Error" );
@@ -675,6 +749,14 @@ public class Main extends Application
 	} // End of start() method.
 
 
+	/**
+	 * OpenButtonHandler
+	 * This method will create a handler for the open file buttons.
+	 *
+	 * @param title     the title to put at the top of the FileChooser dialog window.
+	 * @param stageName the stage to open this dialog window over.
+	 * @return the file name chosen by FileChooser.
+	 */
 	@FXML
 	private String OpenButtonHandler( String title, Stage stageName )
 	{
@@ -684,7 +766,9 @@ public class Main extends Application
 		// Set the title for the FileChooser window.
 		fileChooser.setTitle( title );
 		// Set the file selection filters available to the user.
-		fileChooser.getExtensionFilters().addAll( new FileChooser.ExtensionFilter( "Text Files", "*.txt" ), new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
+		fileChooser.getExtensionFilters().addAll(
+			new FileChooser.ExtensionFilter( "Text Files", "*.txt" ),
+			new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
 		File selectedFile = fileChooser.showOpenDialog( stageName );
 		if( selectedFile != null )
 		{
@@ -693,7 +777,75 @@ public class Main extends Application
 		}
 		else
 		{
+			errorLogger.info( "Open file dialog was cancelled." );
 			return null;
 		}
-	}
+	} // End of OpenButtonHandler() method.
+
+
+	/**
+	 * SaveButtonHandler
+	 * This method will create a handler for the save file button.
+	 * @param CalculatedUtilization the object that we want to save.
+	 * @param stageName the stage to open this dialog window over.
+	 */
+	private void SaveButtonHandler( ObservableList< InterfaceStats > CalculatedUtilization, Stage stageName )
+	{
+		JSONObject stats = new JSONObject();
+		for( InterfaceStats row :
+			CalculatedUtilization )
+		{
+			stats.put( row.getDescription(), row.getValue() );
+		}
+
+		FileChooser fileChooser = new FileChooser();
+		// Set the FileChooser to use the PWD.
+		fileChooser.setInitialDirectory( new File( System.getProperty( "user.dir" ) ) );
+		// Set the title for the FileChooser window.
+		fileChooser.setTitle( "Save stats" );
+		// Set the file selection filters available to the user.
+		fileChooser.getExtensionFilters().addAll(
+			new FileChooser.ExtensionFilter( "JSON Files", "*.json" ),
+			new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
+		File selectedFile = fileChooser.showSaveDialog( stageName );
+
+		if( selectedFile != null )
+		{
+			try
+			{
+				// Try to create a file using the name selected in FileChooser.
+				FileWriter file = new FileWriter( selectedFile );
+				// Write the String version of the JSON to the file.
+				file.write( stats.toJSONString() );
+				file.flush();
+				file.close();
+			}
+			catch( IOException ioe )
+			{
+				errorLogger.error( "Exception: Unable to save output file!" );
+				ioe.printStackTrace();
+			}
+		}
+		else
+		{
+			errorLogger.info( "Save file dialog was cancelled." );
+		}
+	} // End of SaveButtonHandler() method.
+
+
+	/**
+	 * InvalidButtonAlert
+	 * This method will display an error dialog pop-up indicating that the button is not yet ready to use.
+	 */
+	private void InvalidButtonAlert()
+	{
+		errorLogger.error( "The save button was clicked before it was ready." );
+		// Create a pop-up alert to signal that this button is not available yet.
+		Alert alert = new Alert( Alert.AlertType.ERROR );
+		alert.setTitle( "Invalid Button" );
+		alert.setHeaderText( "This button is not ready yet." );
+		alert.setContentText( "Click on an interface first." );
+
+		alert.showAndWait();
+	} // End of InvalidButtonAlert() method.
 }
