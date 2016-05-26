@@ -593,6 +593,9 @@ public class Main extends Application
 		// Put the stats TableView on the grid.
 		rootGridPane.add( statisticTableView, 0, 8, 4, 1 );
 
+		// Add a button to save the statistics output.
+		Button saveButton = new Button();
+
 		// Create an event handler for the show interface button.
 		ShowInterfaceButton.setOnAction( e -> {
 			// Read in each file and populate our ArrayLists.
@@ -695,5 +698,15 @@ public class Main extends Application
 		{
 			return null;
 		}
+	}
+
+	private void InvalidButtonAlert() {
+		// Create a pop-up alert to signal that this button is not available yet.
+		Alert alert = new Alert(Alert.AlertType.ERROR);
+		alert.setTitle("Invalid Button");
+		alert.setHeaderText("This button is not ready yet.");
+		alert.setContentText("Click on an interface first.");
+
+		alert.showAndWait();
 	}
 }
