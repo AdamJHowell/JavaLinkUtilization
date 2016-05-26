@@ -335,8 +335,10 @@ public class Main extends Application
 		Long totalOctetDelta;
 		Long inDiscardDelta;
 		Long outDiscardDelta;
+		Long totalDiscardDelta;
 		Long inErrorDelta;
 		Long outErrorDelta;
+		Long totalErrorDelta;
 		Double inUtilization;
 		Double outUtilization;
 		Double totalUtilization;
@@ -443,6 +445,10 @@ public class Main extends Application
 		}
 		statsAL.add( new InterfaceStats( "Outbound Discards", outDiscardDelta.toString() ) );
 
+		// Calculate total discard delta.
+		totalDiscardDelta = inDiscardDelta + outDiscardDelta;
+		statsAL.add(new InterfaceStats("Total Discards", totalDiscardDelta.toString()));
+
 		// Calculate inbound error delta.
 		inErrorDelta = walk2.getIfInErrors() - walk1.getIfInErrors();
 		// If a 'counter wrap' occurred.
@@ -460,6 +466,10 @@ public class Main extends Application
 			outErrorDelta += COUNTER32MAX;
 		}
 		statsAL.add( new InterfaceStats( "Outbound Errors", outErrorDelta.toString() ) );
+
+		// Calculate total error delta.
+		totalErrorDelta = inErrorDelta + outErrorDelta;
+		statsAL.add(new InterfaceStats("Total Errors", totalErrorDelta.toString()));
 
 		//return "Link inUtilization for " + walk1.getIfDescr() + "\n" + inUtilization.toString();
 		return statsAL;
