@@ -85,9 +85,9 @@ public class Main extends Application
 	private final static boolean DEBUG = false;
 	private final ObservableList< SNMPInterface > interfaceData =
 		FXCollections.observableArrayList(
-			new SNMPInterface( 99L, "test data" ),
-			new SNMPInterface( 97L, "press the" ),
-			new SNMPInterface( 96L, "'Show Interfaces' button" )
+			new SNMPInterface( 42L, "Test data." ),
+			new SNMPInterface( 42L, "Press the..." ),
+			new SNMPInterface( 42L, "'Show Interfaces' button" )
 		);
 	public TextField firstFile;
 	public TextField secondFile;
@@ -342,20 +342,7 @@ public class Main extends Application
 		Double totalUtilization;
 		ObservableList< InterfaceStats > statsAL = FXCollections.observableArrayList();
 
-		// Get the ifSpeed for each walk.  These MUST match.
-		if( walk1.getIfSpeed().equals( walk2.getIfSpeed() ) )
-		{
-			statsAL.add( new InterfaceStats( "Interface Speed", walk1.getIfSpeed().toString() ) );
-		}
-		else
-		{
-			//CalculatedStats.add( "ifSpeed does not match!" );
-			//return CalculatedStats;
-			statsAL.add( new InterfaceStats( "Interface Speeds", "Do Not Match" ) );
-			return statsAL;
-		}
-
-		// Get the time delta.  The timestamps MUST be different for inUtilization to be meaningful.
+		// Get the time delta.  The timestamps MUST be different for utilization to be meaningful.
 		if( walk1.getSysUpTime() < walk2.getSysUpTime() )
 		{
 			// Get the number of ticks between the two walks.  There are 100 ticks per second.
@@ -367,6 +354,19 @@ public class Main extends Application
 			statsAL.add( new InterfaceStats( "Invalid data:", "SysUpTimes match" ) );
 			//return CalculatedStats;
 			return null;
+		}
+
+		// Get the ifSpeed for each walk.  These MUST match.
+		if( walk1.getIfSpeed().equals( walk2.getIfSpeed() ) )
+		{
+			statsAL.add( new InterfaceStats( "Interface Speed", walk1.getIfSpeed().toString() ) );
+		}
+		else
+		{
+			//CalculatedStats.add( "ifSpeed does not match!" );
+			//return CalculatedStats;
+			statsAL.add( new InterfaceStats( "Interface Speeds", "Do Not Match" ) );
+			return statsAL;
 		}
 
 		// Get the inOctet delta.
