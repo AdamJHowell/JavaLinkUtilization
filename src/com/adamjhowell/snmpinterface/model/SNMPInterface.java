@@ -74,12 +74,6 @@ public class SNMPInterface
 	}
 
 
-	public void setIfDescr( String Descr )
-	{
-		ifDescr.set( Descr );
-	}
-
-
 	public Long getIfSpeed()
 	{
 		return ifSpeed;

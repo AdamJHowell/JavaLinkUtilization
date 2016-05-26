@@ -24,20 +24,15 @@ public class InterfaceStats
 	}
 
 
-	public void setDescription( String description )
-	{
-		this.description = description;
-	}
-
-
 	public String getValue()
 	{
 		return value;
 	}
 
 
-	public void setValue( String value )
+	@Override
+	public String toString()
 	{
-		this.value = value;
+		return description + " " + value;
 	}
 }
