@@ -23,8 +23,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 
@@ -368,13 +370,14 @@ public class Main extends Application
 		Double outUtilization;
 		Double totalUtilization;
 		ObservableList< InterfaceStats > statsAL = FXCollections.observableArrayList();
+		NumberFormat nf_us = NumberFormat.getInstance( Locale.US );
 
 		// Get the time delta.  The timestamps MUST be different for utilization to be meaningful.
 		if( walk1.getSysUpTime() < walk2.getSysUpTime() )
 		{
 			// Get the number of ticks between the two walks.  There are 100 ticks per second.
 			statsAL.add( new InterfaceStats( "Time Delta",
-				( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) + " seconds." ) );
+				nf_us.format( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) ) + " seconds" ) );
 		}
 		else
 		{
@@ -388,7 +391,8 @@ public class Main extends Application
 		// Get the ifSpeed for each walk.  These MUST match.
 		if( walk1.getIfSpeed().equals( walk2.getIfSpeed() ) )
 		{
-			statsAL.add( new InterfaceStats( "Interface Speed", walk1.getIfSpeed().toString() ) );
+			//statsAL.add( new InterfaceStats( "Interface Speed", walk1.getIfSpeed().toString() ) );
+			statsAL.add( new InterfaceStats( "Interface Speed", nf_us.format( walk1.getIfSpeed() ) ) );
 		}
 		else
 		{
@@ -404,7 +408,7 @@ public class Main extends Application
 		{
 			inOctetDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Inbound Octet Delta", inOctetDelta.toString() ) );
+		statsAL.add( new InterfaceStats( "Inbound Octet Delta", nf_us.format( inOctetDelta ) ) );
 
 		// Get the outOctet delta.
 		outOctetDelta = walk2.getIfOutOctets() - walk1.getIfOutOctets();
@@ -413,9 +417,9 @@ public class Main extends Application
 		{
 			outOctetDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Outbound Octet Delta", outOctetDelta.toString() ) );
+		statsAL.add( new InterfaceStats( "Outbound Octet Delta", nf_us.format( outOctetDelta ) ) );
 		totalOctetDelta = inOctetDelta + outOctetDelta;
-		statsAL.add( new InterfaceStats( "Total Delta", ( totalOctetDelta.toString() ) ) );
+		statsAL.add( new InterfaceStats( "Total Delta", ( nf_us.format( totalOctetDelta ) ) ) );
 
 		// Calculate inUtilization and outUtilization.  Avoid divide-by-zero errors.
 		if( ( walk2.getSysUpTime() - walk1.getSysUpTime() ) != 0 && walk1.getIfSpeed() != 0 )
@@ -428,7 +432,7 @@ public class Main extends Application
 			Double
 				inTruncatedDouble =
 				new BigDecimal( inUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
-			statsAL.add( new InterfaceStats( "Inbound Utilization", inTruncatedDouble.toString() ) );
+			statsAL.add( new InterfaceStats( "Inbound Utilization", nf_us.format( inTruncatedDouble ) ) );
 
 			// Calculate the outUtilization.
 			outUtilization =
@@ -438,7 +442,7 @@ public class Main extends Application
 			Double
 				outTruncatedDouble =
 				new BigDecimal( outUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
-			statsAL.add( new InterfaceStats( "Outbound Utilization", outTruncatedDouble.toString() ) );
+			statsAL.add( new InterfaceStats( "Outbound Utilization", nf_us.format( outTruncatedDouble ) ) );
 
 			// Calculate the totalUtilization.
 			totalUtilization =
@@ -449,7 +453,7 @@ public class Main extends Application
 			Double
 				totalTruncatedDouble =
 				new BigDecimal( totalUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
-			statsAL.add( new InterfaceStats( "Total Utilization", totalTruncatedDouble.toString() ) );
+			statsAL.add( new InterfaceStats( "Total Utilization", nf_us.format( totalTruncatedDouble ) ) );
 		}
 		else
 		{
@@ -475,7 +479,7 @@ public class Main extends Application
 		{
 			inDiscardDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Inbound Discards", inDiscardDelta.toString() ) );
+		statsAL.add( new InterfaceStats( "Inbound Discards", nf_us.format( inDiscardDelta ) ) );
 
 		// Calculate outbound discard delta.
 		outDiscardDelta = walk2.getIfOutDiscards() - walk1.getIfOutDiscards();
@@ -484,11 +488,11 @@ public class Main extends Application
 		{
 			outDiscardDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Outbound Discards", outDiscardDelta.toString() ) );
+		statsAL.add( new InterfaceStats( "Outbound Discards", nf_us.format( outDiscardDelta ) ) );
 
 		// Calculate total discard delta.
 		totalDiscardDelta = inDiscardDelta + outDiscardDelta;
-		statsAL.add( new InterfaceStats( "Total Discards", totalDiscardDelta.toString() ) );
+		statsAL.add( new InterfaceStats( "Total Discards", nf_us.format( totalDiscardDelta ) ) );
 
 		// Calculate inbound error delta.
 		inErrorDelta = walk2.getIfInErrors() - walk1.getIfInErrors();
@@ -497,7 +501,7 @@ public class Main extends Application
 		{
 			inErrorDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Inbound Errors", inErrorDelta.toString() ) );
+		statsAL.add( new InterfaceStats( "Inbound Errors", nf_us.format( inErrorDelta ) ) );
 
 		// Calculate outbound error delta.
 		outErrorDelta = walk2.getIfOutErrors() - walk1.getIfOutErrors();
@@ -506,11 +510,11 @@ public class Main extends Application
 		{
 			outErrorDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Outbound Errors", outErrorDelta.toString() ) );
+		statsAL.add( new InterfaceStats( "Outbound Errors", nf_us.format( outErrorDelta ) ) );
 
 		// Calculate total error delta.
 		totalErrorDelta = inErrorDelta + outErrorDelta;
-		statsAL.add( new InterfaceStats( "Total Errors", totalErrorDelta.toString() ) );
+		statsAL.add( new InterfaceStats( "Total Errors", nf_us.format( totalErrorDelta ) ) );
 
 		//return "Link inUtilization for " + walk1.getIfDescr() + "\n" + inUtilization.toString();
 		return statsAL;
@@ -786,8 +790,9 @@ public class Main extends Application
 	/**
 	 * SaveButtonHandler
 	 * This method will create a handler for the save file button.
+	 *
 	 * @param CalculatedUtilization the object that we want to save.
-	 * @param stageName the stage to open this dialog window over.
+	 * @param stageName             the stage to open this dialog window over.
 	 */
 	private void SaveButtonHandler( ObservableList< InterfaceStats > CalculatedUtilization, Stage stageName )
 	{
