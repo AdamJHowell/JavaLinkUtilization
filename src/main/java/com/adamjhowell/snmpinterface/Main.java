@@ -88,14 +88,16 @@ public class Main extends Application
 	private final static String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";
 	private final static long COUNTER32MAX = 4294967295L;
 	private final static boolean DEBUG = false;
+
 	// Logging
 	private static final Logger errorLogger = LoggerFactory.getLogger( Main.class );
+	// Data for the table.
 	private final ObservableList< SNMPInterface > interfaceData =
 		FXCollections.observableArrayList(
 			new SNMPInterface( 42L, "Test data." ),
 			new SNMPInterface( 42L, "Press the..." ),
 			new SNMPInterface( 42L, "'Show Interfaces' button" )
-		);
+		                                 );
 	// FXML symbols.
 	public TextField firstFile;
 	public TextField secondFile;
@@ -106,6 +108,7 @@ public class Main extends Application
 	public Label fileLabel;
 	public GridPane rootNode;
 	// This table (interfaceTableView) will show all discovered SNMP interfaces.
+	//private TableView< SNMPInterface > interfaceTableView = new TableView<>();
 	private TableView< SNMPInterface > interfaceTableView = new TableView<>();
 	// This TableView will show the stats for the selected interface.
 	private TableView< InterfaceStats > statisticTableView = new TableView<>();
@@ -377,7 +380,8 @@ public class Main extends Application
 		{
 			// Get the number of ticks between the two walks.  There are 100 ticks per second.
 			statsAL.add( new InterfaceStats( "Time Delta",
-				nf_us.format( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) ) + " seconds" ) );
+				nf_us.format( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) ) +
+					" seconds" ) );
 		}
 		else
 		{

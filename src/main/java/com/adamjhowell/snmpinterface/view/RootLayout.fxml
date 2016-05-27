@@ -3,8 +3,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<GridPane fx:id = "rootNode" hgap = "5.0" vgap = "5.0" xmlns = "http://javafx.com/javafx/null"
-          xmlns:fx = "http://javafx.com/fxml/1" fx:controller = "com.adamjhowell.snmpinterface.Main">
+<GridPane xmlns:fx = "http://javafx.com/fxml/1" fx:id = "rootNode" hgap = "5.0" vgap = "5.0"
+          xmlns = "http://javafx.com/javafx/null" fx:controller = "com.adamjhowell.snmpinterface.Main">
 	<columnConstraints>
 		<ColumnConstraints hgrow = "SOMETIMES" maxWidth = "40.0" minWidth = "40.0" prefWidth = "40.0"/>
 		<ColumnConstraints hgrow = "SOMETIMES" maxWidth = "200.0" minWidth = "100.0" prefWidth = "150.0"/>
@@ -30,7 +30,7 @@
 	<Label text = "Second walk file:" GridPane.columnIndex = "1" GridPane.rowIndex = "1"/>
 	<TextField fx:id = "firstFile" text = "walk1.txt" GridPane.columnIndex = "2"/>
 	<TextField fx:id = "secondFile" text = "walk2.txt" GridPane.columnIndex = "2" GridPane.rowIndex = "1"/>
-	<Button mnemonicParsing = "false" onAction = "" text = ".."
+	<Button mnemonicParsing = "false" text = ".."
 	        textAlignment = "CENTER" GridPane.columnIndex = "3"/>
 	<Button fx:id = "openWalk2Button" mnemonicParsing = "false" text = ".."
 	        GridPane.columnIndex = "3" GridPane.rowIndex = "1"/>
