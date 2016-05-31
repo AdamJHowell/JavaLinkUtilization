@@ -14,7 +14,9 @@ hs_err_pid*
 # Directories that I do not want included
 .idea/
 out/
+target/
 
 # Files that I do not want included
 *.epp
 *.iml
+src/com/
