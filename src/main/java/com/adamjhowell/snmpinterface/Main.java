@@ -3,6 +3,7 @@ package com.adamjhowell.snmpinterface;
 
 import com.adamjhowell.snmpinterface.model.InterfaceStats;
 import com.adamjhowell.snmpinterface.model.SNMPInterface;
+import com.google.gson.Gson;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,7 +18,6 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -540,7 +540,10 @@ public class Main extends Application
 		primaryStage.getClass().getResource( "view/RootLayout.fxml" );
 		// Create the stage and set the window title.
 		primaryStage.setTitle( "SNMP Link Utilization" );
-		primaryStage.getIcons().add( new Image( "file:resources/images/nic.png" ) );
+		// Set the icon for a non-Maven build.
+		//primaryStage.getIcons().add( new Image( "file:resources/images/nic.png" ) );
+		// Set the icon for a Maven build.
+		primaryStage.getIcons().add( new Image( "images/nic.png" ) );
 
 		// Create a GridPane that will hold all of the elements.
 		GridPane rootGridPane = new GridPane();
@@ -800,12 +803,7 @@ public class Main extends Application
 	 */
 	private void SaveButtonHandler( ObservableList< InterfaceStats > CalculatedUtilization, Stage stageName )
 	{
-		JSONObject stats = new JSONObject();
-		for( InterfaceStats row :
-			CalculatedUtilization )
-		{
-			stats.put( row.getDescription(), row.getValue() );
-		}
+		Gson gsonObject = new Gson();
 
 		FileChooser fileChooser = new FileChooser();
 		// Set the FileChooser to use the PWD.
@@ -825,7 +823,8 @@ public class Main extends Application
 				// Try to create a file using the name selected in FileChooser.
 				FileWriter file = new FileWriter( selectedFile );
 				// Write the String version of the JSON to the file.
-				file.write( stats.toJSONString() );
+				//file.write( stats.toJSONString() );
+				file.write( gsonObject.toJson( CalculatedUtilization ) );
 				file.flush();
 				file.close();
 			}
