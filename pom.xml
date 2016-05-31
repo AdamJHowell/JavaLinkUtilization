@@ -8,8 +8,12 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<json-simple.version>1.1.1</json-simple.version>
+<<<<<<< c26ed7185deac6b830b9e4660d715e7363ba4e65
 		<slf4j-api.version>1.7.21</slf4j-api.version>
 		<slf4j-jdk14.version>1.7.21</slf4j-jdk14.version>
+=======
+		<slf4j.version>1.7.21</slf4j.version>
+>>>>>>> 31 - Rollback of Maven.
 	</properties>
 
 	<build>
@@ -29,13 +33,26 @@
 			</plugin>
 		</plugins>
 	</build>
+<<<<<<< c26ed7185deac6b830b9e4660d715e7363ba4e65
 	<groupId>JavaSNMPLinkUtilization</groupId>
 	<artifactId>JavaSNMPLinkUtilization</artifactId>
+=======
+	<groupId>JavaLinkUtilization</groupId>
+	<artifactId>JavaLinkUtilization</artifactId>
+>>>>>>> 31 - Rollback of Maven.
 	<version>1.0-SNAPSHOT</version>
 
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+<<<<<<< c26ed7185deac6b830b9e4660d715e7363ba4e65
+=======
+				<groupId>com.google.code.gson</groupId>
+				<artifactId>gson</artifactId>
+				<version>2.6.2</version>
+			</dependency>
+			<dependency>
+>>>>>>> 31 - Rollback of Maven.
 				<groupId>com.googlecode.json-simple</groupId>
 				<artifactId>json-simple</artifactId>
 				<version>${json-simple.version}</version>
@@ -44,14 +61,26 @@
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
+<<<<<<< c26ed7185deac6b830b9e4660d715e7363ba4e65
 				<version>${slf4j-api.version}</version>
+=======
+				<version>${slf4j.version}</version>
+>>>>>>> 31 - Rollback of Maven.
 			</dependency>
 
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-jdk14</artifactId>
+<<<<<<< c26ed7185deac6b830b9e4660d715e7363ba4e65
 				<version>${slf4j-jdk14.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
 </project>
+=======
+				<version>${slf4j.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+</project>
+>>>>>>> 31 - Rollback of Maven.
