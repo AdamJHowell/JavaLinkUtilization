@@ -1,4 +1,4 @@
-package main.java.com.adamjhowell.snmpinterface.model;
+package com.adamjhowell.snmpinterface.model;
 
 
 /**
