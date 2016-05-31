@@ -1,8 +1,6 @@
-package com.adamjhowell.snmpinterface;
+package main.java.com.adamjhowell.snmpinterface;
 
 
-import com.adamjhowell.snmpinterface.model.InterfaceStats;
-import com.adamjhowell.snmpinterface.model.SNMPInterface;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,6 +15,8 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import main.java.com.adamjhowell.snmpinterface.model.InterfaceStats;
+import main.java.com.adamjhowell.snmpinterface.model.SNMPInterface;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
