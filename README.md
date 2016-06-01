@@ -4,6 +4,7 @@ My LinkUtilization program rewritten in Java
 
 ToDo:
 - Switch to a true FXML layout.
+- Port to Android.
 
 
 Done:
@@ -24,6 +25,8 @@ Done:
 - Changed the ListView to a TableView, and separated the labels and data into their own columns.
 - Added an option to save the output in JSON formatted text.
 - Added SLF4J logging for most errors and some informational.
+- Switched from JSON Simple to Gson.
+- Eliminated the "Unchecked generics array creation for varargs parameter" warning by switching from one .setAll() to two .add() lines.
 
 
 Commit history:
@@ -105,3 +108,27 @@ I still want to switch to true FXML, and to have the option to save the output.
 You will need JSON Simple in your classpath due to the save functionality.
 I also added SLF4J logging for most errors, warning, and even some informational level events.
 You will need SLF4J and JSON-Simple libraries in your classpath due to the logging functionality.  I used slf4j-api-1.7.21 and slf4j-jdk14-1.7.21
+
+29 - Added Maven, fixed comments.
+I want to move my code to the Maven folder, or move Maven to the existing source location.
+I added a number of comments (mostly to the model classes) and fixed a few others.
+
+30 - Maven broke a lot of things.
+I am still trying to fix them all.
+
+31 - Rollback of Maven.
+And re-instantiation of Maven.
+This time, I am slowly implementing Maven.  I will commit more frequently, to make errors easier to repair.
+
+32 - Fixed Maven
+I may have fixed Maven.
+The project compiles and runs, so I will merge this branch.
+
+33 - Maven is mostly in place.
+Maven builds up to 'install' and 'site'.
+Files are now in the correct folders.
+I want to switch from JSON-simple to GSON, since it supports generics
+
+34 - Added Gson.
+This fixed the generics warning that I was getting earlier with JSON Simple.
+

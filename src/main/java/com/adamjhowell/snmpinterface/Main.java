@@ -615,10 +615,14 @@ public class Main extends Application
 		// Set the interface description column width to 70%.
 		ifDescrCol.prefWidthProperty().bind( interfaceTableView.widthProperty().multiply( 0.7 ) );
 
-		// These next lines should populate the table with interfaceData, and add it to the stage, even if the button is not yet pressed.
+		// Populate the table with sample data.
 		interfaceTableView.setItems( interfaceData );
-		// http://stackoverflow.com/questions/21132692/java-unchecked-unchecked-generic-array-creation-for-varargs-parameter
-		interfaceTableView.getColumns().setAll( ifIndexCol, ifDescrCol );
+
+		// Add the columns to the TableView.
+		// I stopped using .setAll() here because it gives an "Unchecked generics array creation for varargs parameter" warning.
+		interfaceTableView.getColumns().add( ifIndexCol );
+		interfaceTableView.getColumns().add( ifDescrCol );
+
 		// Put the SNMP interface TableView on the grid.
 		rootGridPane.add( interfaceTableView, 0, 3, 4, 1 );
 
@@ -640,7 +644,9 @@ public class Main extends Application
 		statValueCol.prefWidthProperty().bind( statisticTableView.widthProperty().multiply( 0.4 ) );
 
 		// Add the columns to the TableView.
-		statisticTableView.getColumns().setAll( statDescrCol, statValueCol );
+		// I stopped using .setAll() here because it gives an "Unchecked generics array creation for varargs parameter" warning.
+		statisticTableView.getColumns().add( statDescrCol );
+		statisticTableView.getColumns().add( statValueCol );
 
 		// Put the stats TableView on the grid.
 		rootGridPane.add( statisticTableView, 0, 7, 4, 1 );
@@ -803,8 +809,10 @@ public class Main extends Application
 	 */
 	private void SaveButtonHandler( ObservableList< InterfaceStats > CalculatedUtilization, Stage stageName )
 	{
+		// Create a Gson class object.
 		Gson gsonObject = new Gson();
 
+		// Set up a FileChooser.
 		FileChooser fileChooser = new FileChooser();
 		// Set the FileChooser to use the PWD.
 		fileChooser.setInitialDirectory( new File( System.getProperty( "user.dir" ) ) );
@@ -814,6 +822,7 @@ public class Main extends Application
 		fileChooser.getExtensionFilters().addAll(
 			new FileChooser.ExtensionFilter( "JSON Files", "*.json" ),
 			new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
+		// Implement the FileChooser as a save dialog over the stage.
 		File selectedFile = fileChooser.showSaveDialog( stageName );
 
 		if( selectedFile != null )
@@ -822,9 +831,10 @@ public class Main extends Application
 			{
 				// Try to create a file using the name selected in FileChooser.
 				FileWriter file = new FileWriter( selectedFile );
-				// Write the String version of the JSON to the file.
-				//file.write( stats.toJSONString() );
+
+				// Convert CalculatedUtilization to JSON and write it to file.
 				file.write( gsonObject.toJson( CalculatedUtilization ) );
+
 				file.flush();
 				file.close();
 			}
