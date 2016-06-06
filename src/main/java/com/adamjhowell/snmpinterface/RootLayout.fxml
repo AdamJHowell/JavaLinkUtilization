@@ -3,8 +3,11 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<GridPane xmlns:fx = "http://javafx.com/fxml/1" fx:id = "rootNode" hgap = "5.0" vgap = "5.0"
-          xmlns = "http://javafx.com/javafx/null" fx:controller = "com.adamjhowell.snmpinterface.Main">
+<GridPane xmlns:fx = "http://javafx.com/fxml/1"
+          fx:id = "rootNode" hgap = "5.0"
+          vgap = "5.0"
+          xmlns = "http://javafx.com/javafx/8.0.65"
+          fx:controller = "com.adamjhowell.snmpinterface.Main">
 	<columnConstraints>
 		<ColumnConstraints hgrow = "SOMETIMES" maxWidth = "40.0" minWidth = "40.0" prefWidth = "40.0"/>
 		<ColumnConstraints hgrow = "SOMETIMES" maxWidth = "200.0" minWidth = "100.0" prefWidth = "150.0"/>
@@ -17,8 +20,9 @@
 		<RowConstraints maxHeight = "30.0" minHeight = "30.0" prefHeight = "30.0" vgrow = "SOMETIMES"/>
 		<RowConstraints maxHeight = "30.0" minHeight = "30.0" prefHeight = "30.0" vgrow = "SOMETIMES"/>
 		<RowConstraints maxHeight = "400.0" minHeight = "100.0" prefHeight = "200.0" vgrow = "SOMETIMES"/>
-		<RowConstraints maxHeight = "30.0" minHeight = "30.0" prefHeight = "30.0" vgrow = "SOMETIMES"/>
+		<RowConstraints maxHeight = "10.0" minHeight = "10.0" prefHeight = "10.0" vgrow = "SOMETIMES"/>
 		<RowConstraints maxHeight = "400.0" minHeight = "100.0" prefHeight = "200.0" vgrow = "SOMETIMES"/>
+		<RowConstraints maxHeight = "30.0" minHeight = "30.0" prefHeight = "30.0" vgrow = "SOMETIMES"/>
 	</rowConstraints>
 	<padding>
 		<Insets bottom = "15.0" left = "15.0" right = "15.0" top = "15.0"/>
@@ -30,10 +34,9 @@
 	<Label text = "Second walk file:" GridPane.columnIndex = "1" GridPane.rowIndex = "1"/>
 	<TextField fx:id = "firstFile" text = "walk1.txt" GridPane.columnIndex = "2"/>
 	<TextField fx:id = "secondFile" text = "walk2.txt" GridPane.columnIndex = "2" GridPane.rowIndex = "1"/>
-	<Button mnemonicParsing = "false" text = ".."
-	        textAlignment = "CENTER" GridPane.columnIndex = "3"/>
-	<Button fx:id = "openWalk2Button" mnemonicParsing = "false" text = ".."
-	        GridPane.columnIndex = "3" GridPane.rowIndex = "1"/>
+	<Button mnemonicParsing = "false" text = ".." textAlignment = "CENTER" GridPane.columnIndex = "3"/>
+	<Button fx:id = "openWalk2Button" mnemonicParsing = "false" text = ".." GridPane.columnIndex = "3"
+	        GridPane.rowIndex = "1"/>
 	<Button fx:id = "showInterfacesButton" mnemonicParsing = "false" prefHeight = "31.0" prefWidth = "284.0"
 	        text = "Show Interfaces" GridPane.columnIndex = "1" GridPane.rowIndex = "2"/>
 	<TableView maxWidth = "600.0" prefHeight = "200.0" prefWidth = "600.0" GridPane.columnIndex = "1"
@@ -48,9 +51,14 @@
 			<Insets/>
 		</GridPane.margin>
 	</TableView>
-	<Label text = "Press the 'Show Interfaces' button above." GridPane.columnIndex = "1"
-	       GridPane.columnSpan = "2147483647" GridPane.rowIndex = "4"/>
-	<ListView prefHeight = "200.0" prefWidth = "200.0" GridPane.columnIndex = "1" GridPane.columnSpan = "3"
-	          GridPane.rowIndex = "5"/>
 	<Label fx:id = "fileLabel" GridPane.columnIndex = "2" GridPane.columnSpan = "2" GridPane.rowIndex = "2"/>
+	<TableView prefHeight = "200.0" prefWidth = "266.0" GridPane.columnIndex = "1" GridPane.columnSpan = "3"
+	           GridPane.rowIndex = "5">
+		<columns>
+			<TableColumn maxWidth = "500.0" minWidth = "160.0" prefWidth = "160.0" text = "Description"/>
+			<TableColumn maxWidth = "500.0" minWidth = "200.0" prefWidth = "200.0" text = "Value"/>
+		</columns>
+	</TableView>
+	<Button fx:id = "saveButton" mnemonicParsing = "false" text = "Save" GridPane.columnIndex = "1"
+	        GridPane.rowIndex = "6"/>
 </GridPane>

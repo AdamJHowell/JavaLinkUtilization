@@ -8,9 +8,11 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -89,6 +91,7 @@ public class Main extends Application
 	private final static long COUNTER32MAX = 4294967295L;
 	private final static boolean DEBUG = false;
 
+
 	// Logging
 	private static final Logger errorLogger = LoggerFactory.getLogger( Main.class );
 	// Data for the table.
@@ -99,6 +102,7 @@ public class Main extends Application
 			new SNMPInterface( 42L, "'Show Interfaces' button" )
 		                                 );
 	// FXML symbols.
+	@FXML
 	public TextField firstFile;
 	public TextField secondFile;
 	public Button openWalk2Button;
@@ -107,6 +111,7 @@ public class Main extends Application
 	public TableColumn ifDescCol;
 	public Label fileLabel;
 	public GridPane rootNode;
+	public Button saveButton;
 	// This table (interfaceTableView) will show all discovered SNMP interfaces.
 	//private TableView< SNMPInterface > interfaceTableView = new TableView<>();
 	private TableView< SNMPInterface > interfaceTableView = new TableView<>();
@@ -238,7 +243,7 @@ public class Main extends Application
 	 * @param ifIndex the SNMP Interface Index to build.
 	 * @return a SNMPInterface class object that represents the details for the requested interface.
 	 */
-	private static SNMPInterface BuildCompleteSNMPInterface( List< String > walk, long ifIndex )
+	private static SNMPInterface BuildCompleteSNMPInterface( List< String > walk, Long ifIndex )
 	{
 		long tempSysUpTime = 0;
 		String tempIfDescr = "";
@@ -536,8 +541,13 @@ public class Main extends Application
 	@Override
 	public void start( Stage primaryStage ) throws Exception
 	{
-		// This line does not work yet.  It is an attempt to start using FXML for layout.
-		primaryStage.getClass().getResource( "view/RootLayout.fxml" );
+		// For whatever reason, IntelliJ is not copying RootLayout.fxml to the target directory.
+		// Copy it there manually, if you have any problems.
+		// Perhaps I need to build exclusively with Maven now.
+		Parent root = FXMLLoader.load( getClass().getResource( "RootLayout.fxml" ) );
+
+		Scene primaryScene = new Scene( root, 500, 600 );
+
 		// Create the stage and set the window title.
 		primaryStage.setTitle( "SNMP Link Utilization" );
 		// Set the icon for a non-Maven build.
@@ -553,7 +563,7 @@ public class Main extends Application
 		rootGridPane.setAlignment( Pos.CENTER );
 
 		// Set up the Scene, composed of the GridPane we just created.
-		Scene primaryScene = new Scene( rootGridPane, 500, 600 );
+//		Scene primaryScene = new Scene( rootGridPane, 500, 600 );
 
 		// Create and add the label and TextField for the first file.
 		rootGridPane.add( new Label( "First walk file:" ), 0, 0 );
@@ -866,4 +876,25 @@ public class Main extends Application
 
 		alert.showAndWait();
 	} // End of InvalidButtonAlert() method.
+
+
+	@FXML // This method is called by the FXMLLoader when initialization is complete
+	void initialize()
+	{
+		assert rootNode != null : "fx:id=\"rootNode\" was not injected: check your FXML file 'RootLayout.fxml'.";
+		assert firstFile != null : "fx:id=\"firstFile\" was not injected: check your FXML file 'RootLayout.fxml'.";
+		assert secondFile != null : "fx:id=\"secondFile\" was not injected: check your FXML file 'RootLayout.fxml'.";
+		assert openWalk2Button != null :
+			"fx:id=\"openWalk2Button\" was not injected: check your FXML file 'RootLayout.fxml'.";
+		assert showInterfacesButton != null :
+			"fx:id=\"showInterfacesButton\" was not injected: check your FXML file 'RootLayout.fxml'.";
+		assert ifIndexCol != null : "fx:id=\"ifIndexCol\" was not injected: check your FXML file 'RootLayout.fxml'.";
+		assert ifDescCol != null : "fx:id=\"ifDescCol\" was not injected: check your FXML file 'RootLayout.fxml'.";
+		assert fileLabel != null : "fx:id=\"fileLabel\" was not injected: check your FXML file 'RootLayout.fxml'.";
+		assert saveButton != null : "fx:id=\"saveButton\" was not injected: check your FXML file 'RootLayout.fxml'.";
+
+		// initialize your logic here: all @FXML variables will have been injected
+		openWalk2Button.setOnAction( event -> System.out.println( "That was easy, wasn't it?" ) );
+//		openWalk2Button.setOnAction( event -> OpenButtonHandler( "Open second walk file", primaryStage ) );
+	}
 }
