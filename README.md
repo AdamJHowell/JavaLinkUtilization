@@ -132,3 +132,4 @@ I want to switch from JSON-simple to GSON, since it supports generics
 34 - Added Gson.
 This fixed the generics warning that I was getting earlier with JSON Simple.
 
+35 - Eliminated the "Unchecked generics array creation for varargs parameter" warning.
