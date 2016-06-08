@@ -643,15 +643,12 @@ public class Controller
 							CalculatedUtilization.addAll( new InterfaceStats( "Unable to calculate utilization",
 								"The time stamps on the two files are identical" ) );
 						}
-						// Populate the TableView with our results.
-						statisticTableView.setItems( CalculatedUtilization );
-						// Create a column for the output description.
+						// Assign each column to a class data member.
 						statDescrCol.setCellValueFactory( new PropertyValueFactory<>( "description" ) );
 						statValueCol.setCellValueFactory( new PropertyValueFactory<>( "value" ) );
 
-						// Add the columns to the TableView.
-						statisticTableView.getColumns().add( statDescrCol );
-						statisticTableView.getColumns().add( statValueCol );
+						// Populate the TableView with our results.
+						statisticTableView.setItems( CalculatedUtilization );
 
 						// Enable the save button.
 						saveButton.setDisable( false );
@@ -676,10 +673,10 @@ public class Controller
 			{
 				fileName = firstFile.getText();
 			}
-			else if( inAL2 == null )
-			{
-				fileName = secondFile.getText();
-			}
+//			else if( inAL2 == null )
+//			{
+//				fileName = secondFile.getText();
+//			}
 			else
 			{
 				fileName = "<unknown>";
@@ -738,6 +735,10 @@ public class Controller
 		showInterfacesButton.setOnAction( event -> ShowInterfaceButtonHandler() );
 		saveButton.setOnAction( event -> InvalidButtonAlert() );
 		exitButton.setOnAction( event -> exitButtonHandler() );
+
+		// Make the tables unmodifiable.
+		interfaceTableView.setEditable( false );
+		statisticTableView.setEditable( false );
 
 		// Create a column for the SNMP interface indices.
 		ifIndexCol.setCellValueFactory( new PropertyValueFactory<>( "ifIndex" ) );

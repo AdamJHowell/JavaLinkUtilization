@@ -53,8 +53,10 @@
 	<TableView fx:id = "statisticTableView" prefHeight = "200.0" prefWidth = "266.0" GridPane.columnIndex = "1"
 	           GridPane.columnSpan = "3" GridPane.rowIndex = "5">
 		<columns>
-			<TableColumn maxWidth = "500.0" minWidth = "160.0" prefWidth = "160.0" text = "Description"/>
-			<TableColumn maxWidth = "500.0" minWidth = "200.0" prefWidth = "200.0" text = "Value"/>
+			<TableColumn fx:id = "statDescrCol" maxWidth = "500.0" minWidth = "160.0" prefWidth = "160.0"
+			             text = "Description"/>
+			<TableColumn fx:id = "statValueCol" maxWidth = "500.0" minWidth = "200.0" prefWidth = "200.0"
+			             text = "Value"/>
 		</columns>
 	</TableView>
 	<Button fx:id = "saveButton" mnemonicParsing = "false" text = "Save" GridPane.columnIndex = "1"
