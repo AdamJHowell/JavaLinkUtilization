@@ -1,10 +1,12 @@
 # JavaLinkUtilization
-My LinkUtilization program rewritten in Java
+My LinkUtilization program rewritten in Java (JavaFX).
+This program has the ability to analyze two SNMP walk files, show all available interfaces (NICs), allow the user to click on one, and show the statistics for that interface.  It is designed to show the delta between the two SNMP walks, specifically link utilization.
 
 
 ToDo:
 - Switch to a true FXML layout.
 - Port to Android.
+- Simplify the Controller.BuildCompleteSNMPInterface() method.
 
 
 Done:
