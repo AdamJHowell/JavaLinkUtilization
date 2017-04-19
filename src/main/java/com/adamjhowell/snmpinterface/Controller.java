@@ -49,11 +49,13 @@ public class Controller
 
 	// Logging
 	private static final Logger errorLogger = LoggerFactory.getLogger( Main.class );
+	private static List< String > WALK;
+	private static Long IF_INDEX;
 	// Data for the table.
-	private final ObservableList< SNMPInterface >
-		interfaceData =
-		FXCollections.observableArrayList( new SNMPInterface( 42L, "Test data." ),
-			new SNMPInterface( 42L, "Press the..." ), new SNMPInterface( 42L, "'Show Interfaces' button" ) );
+	private final ObservableList< SNMPInterface > interfaceData = FXCollections.observableArrayList(
+		new SNMPInterface( 42L, "Test data." ),
+		new SNMPInterface( 42L, "Press the..." ),
+		new SNMPInterface( 42L, "'Show Interfaces' button" ) );
 	@FXML private GridPane rootNode;
 	@FXML private TextField firstFile;
 	@FXML private TextField secondFile;
@@ -122,11 +124,11 @@ public class Controller
 	 * FindInterfaces
 	 * Created by Adam Howell on 2016-05-05.
 	 * This will create two ArrayLists and add every line that begins with a specific OID.
-	 * If those ArrayLists are identical, then it will find the ifIndex and ifDescr for each interface,
+	 * If those ArrayLists are identical, then it will find the IF_INDEX and ifDescr for each interface,
 	 * create a SNMPInterface class object from them, and return an ArrayList of those objects.
 	 *
-	 * @param walk1 the first walk to search through.
-	 * @param walk2 the second walk to search through.
+	 * @param walk1 the first WALK to search through.
+	 * @param walk2 the second WALK to search through.
 	 * @return an ObservableList of discovered interfaces.
 	 */
 	private static ObservableList< SNMPInterface > FindInterfaces( List< String > walk1, List< String > walk2 )
@@ -184,8 +186,8 @@ public class Controller
 	 * This will analyze two data containers and produce human-readable output related to
 	 * the differences between those containers.
 	 *
-	 * @param walk1 the output from BuildCompleteSNMPInterface for the first walk.
-	 * @param walk2 the output from BuildCompleteSNMPInterface for the second walk.
+	 * @param walk1 the output from BuildCompleteSNMPInterface for the first WALK.
+	 * @param walk2 the output from BuildCompleteSNMPInterface for the second WALK.
 	 * @return an ObservableList containing all of the statistics for interface.
 	 */
 	private static ObservableList< InterfaceStats > CalculateStatistics( SNMPInterface walk1, SNMPInterface walk2 )
@@ -223,7 +225,7 @@ public class Controller
 			return null;
 		}
 
-		// Get the ifSpeed for each walk.  These MUST match.
+		// Get the ifSpeed for each WALK.  These MUST match.
 		if( walk1.getIfSpeed().equals( walk2.getIfSpeed() ) )
 		{
 			//statsAL.add( new InterfaceStats( "Interface Speed", walk1.getIfSpeed().toString() ) );
@@ -264,8 +266,7 @@ public class Controller
 				( double ) ( inOctetDelta * 8 * 100 ) /
 					( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Format the double to 3 decimal places.
-			Double
-				inTruncatedDouble =
+			Double inTruncatedDouble =
 				new BigDecimal( inUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
 			statsAL.add( new InterfaceStats( "Inbound Utilization", nf_us.format( inTruncatedDouble ) ) );
 
@@ -274,8 +275,7 @@ public class Controller
 				( double ) ( outOctetDelta * 8 * 100 ) /
 					( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Format the double to 3 decimal places.
-			Double
-				outTruncatedDouble =
+			Double outTruncatedDouble =
 				new BigDecimal( outUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
 			statsAL.add( new InterfaceStats( "Outbound Utilization", nf_us.format( outTruncatedDouble ) ) );
 
@@ -284,8 +284,7 @@ public class Controller
 				( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() ) /
 				2 );
 			// Format the double to 3 decimal places.
-			Double
-				totalTruncatedDouble =
+			Double totalTruncatedDouble =
 				new BigDecimal( totalUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
 			statsAL.add( new InterfaceStats( "Total Utilization", nf_us.format( totalTruncatedDouble ) ) );
 		}
@@ -359,14 +358,16 @@ public class Controller
 	 * BuildCompleteSNMPInterface
 	 * Created by Adam Howell on 2016-05-10.
 	 * This method will find all pertinent stats for a single SNMP Interface, and return an object containing that data.
-	 * The returned object will also contain the System UpTime from that walk.
+	 * The returned object will also contain the System UpTime from that WALK.
 	 *
-	 * @param walk    an ArrayList containing every line from a SNMP walk file.
+	 * @param walk    an ArrayList containing every line from a SNMP WALK file.
 	 * @param ifIndex the SNMP Interface Index to build.
 	 * @return a SNMPInterface class object that represents the details for the requested interface.
 	 */
 	private static SNMPInterface BuildCompleteSNMPInterface( List< String > walk, Long ifIndex )
 	{
+		WALK = walk;
+		IF_INDEX = ifIndex;
 		long tempSysUpTime = 0;
 		String tempIfDescr = "";
 		long tempIfSpeed = 0;
@@ -476,7 +477,7 @@ public class Controller
 	{
 		// Create a handler for the button that launches FileChooser.
 		openWalk1Button.setOnAction( e -> {
-			String fileName = OpenButtonHandler( "Open first walk file" );
+			String fileName = OpenButtonHandler( "Open first WALK file" );
 			if( fileName != null )
 			{
 				firstFile.setText( fileName );
@@ -489,7 +490,7 @@ public class Controller
 	{
 		// Create a handler for the button that launches FileChooser.
 		openWalk2Button.setOnAction( e -> {
-			String fileName = OpenButtonHandler( "Open second walk file" );
+			String fileName = OpenButtonHandler( "Open second WALK file" );
 			if( fileName != null )
 			{
 				secondFile.setText( fileName );
@@ -539,16 +540,11 @@ public class Controller
 	@FXML private void SaveButtonHandler( ObservableList< InterfaceStats > CalculatedUtilization )
 	{
 		Stage primaryStage = ( Stage ) rootNode.getScene().getWindow();
-		// Create a Gson class object.
-		Gson gsonObject = new Gson();
 
 		// Set up a FileChooser.
 		FileChooser fileChooser = new FileChooser();
-		// Set the FileChooser to use the PWD.
 		fileChooser.setInitialDirectory( new File( System.getProperty( "user.dir" ) ) );
-		// Set the title for the FileChooser window.
 		fileChooser.setTitle( "Save stats" );
-		// Set the file selection filters available to the user.
 		fileChooser.getExtensionFilters()
 			.addAll( new FileChooser.ExtensionFilter( "JSON Files", "*.json" ),
 				new FileChooser.ExtensionFilter( "All Files", "*.*" ) );
@@ -563,7 +559,7 @@ public class Controller
 				FileWriter file = new FileWriter( selectedFile );
 
 				// Convert CalculatedUtilization to JSON and write it to file.
-				file.write( gsonObject.toJson( CalculatedUtilization ) );
+				file.write( new Gson().toJson( CalculatedUtilization ) );
 
 				file.flush();
 				file.close();
@@ -612,12 +608,12 @@ public class Controller
 				interfaceTableView.setOnMousePressed( event -> {
 					if( event.isPrimaryButtonDown() )
 					{
-						// Send the first walk and the selected ifIndex to BuildCompleteSNMPInterface.
+						// Send the first WALK and the selected IF_INDEX to BuildCompleteSNMPInterface.
 						SNMPInterface
 							interface1 =
 							BuildCompleteSNMPInterface( inAL1,
 								interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
-						// Send the second walk and the selected ifIndex to BuildCompleteSNMPInterface.
+						// Send the second WALK and the selected IF_INDEX to BuildCompleteSNMPInterface.
 						SNMPInterface
 							interface2 =
 							BuildCompleteSNMPInterface( inAL2,
@@ -638,7 +634,7 @@ public class Controller
 						else
 						{
 							errorLogger.error(
-								"Invalid data, time stamps on the two walk files are identical!" );
+								"Invalid data, time stamps on the two WALK files are identical!" );
 							errorLogger.error( "This happened in the statisticTableView event handler." );
 							CalculatedUtilization.addAll( new InterfaceStats( "Unable to calculate utilization",
 								"The time stamps on the two files are identical" ) );
@@ -681,7 +677,7 @@ public class Controller
 			{
 				fileName = "<unknown>";
 			}
-			errorLogger.error( "The first walk file " + fileName + " could not be opened." );
+			errorLogger.error( "The first WALK file " + fileName + " could not be opened." );
 
 			errorLogger.error( "Invalid data, selected file does not exist!" );
 			// Create a pop-up alert to signal that a file name was invalid.
@@ -741,7 +737,7 @@ public class Controller
 		statisticTableView.setEditable( false );
 
 		// Create a column for the SNMP interface indices.
-		ifIndexCol.setCellValueFactory( new PropertyValueFactory<>( "ifIndex" ) );
+		ifIndexCol.setCellValueFactory( new PropertyValueFactory<>( "IF_INDEX" ) );
 		// Create a column for the SNMP interface descriptions.
 		ifDescCol.setCellValueFactory( new PropertyValueFactory<>( "ifDescr" ) );
 
