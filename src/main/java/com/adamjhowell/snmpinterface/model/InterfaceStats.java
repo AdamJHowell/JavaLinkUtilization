@@ -26,12 +26,21 @@ public class InterfaceStats
 	}
 
 
+	/**
+	 * Since this class is used as an adapter, getters are required to operate properly.
+	 *
+	 * @return the text description to display.
+	 */
 	public String getDescription()
 	{
 		return description;
 	}
 
 
+	/**
+	 * Since this class is used as an adapter, getters are required to operate properly.
+	 * @return the text value to display.
+	 */
 	public String getValue()
 	{
 		return value;

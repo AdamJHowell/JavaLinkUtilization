@@ -11,12 +11,12 @@ package com.adamjhowell.snmpinterface.model;
  * This class is used to transport data around within this program.
  * This class (short constructor) is also used to format data for display in a JavaFX TableView object (interfaceTableView).
  * The ifIndex class member will go into column 1, named "Index".
- * The ifDescr class member will go into column 2, named "Name".
+ * The ifDescr class member will go into column 2, named "Description".
  */
 public class SNMPInterface
 {
-	private String ifDescr;
 	private Long ifIndex;
+	private String ifDescr;
 	private Long sysUpTime;
 	private Long ifSpeed;
 	private Long ifInOctets;
@@ -42,15 +42,15 @@ public class SNMPInterface
 	 * @param ifOutErrors   the interface outbound error count from the SNMP walk.
 	 */
 	public SNMPInterface( Long ifIndex,
-		String ifDescr,
-		Long sysUpTime,
-		Long ifSpeed,
-		Long ifInOctets,
-		Long ifInDiscards,
-		Long ifInErrors,
-		Long ifOutOctets,
-		Long ifOutDiscards,
-		Long ifOutErrors )
+	                      String ifDescr,
+	                      Long sysUpTime,
+	                      Long ifSpeed,
+	                      Long ifInOctets,
+	                      Long ifInDiscards,
+	                      Long ifInErrors,
+	                      Long ifOutOctets,
+	                      Long ifOutDiscards,
+	                      Long ifOutErrors )
 	{
 		this.ifIndex = ifIndex;
 		this.ifDescr = ifDescr;
@@ -78,27 +78,9 @@ public class SNMPInterface
 	}
 
 
-	public Long getSysUpTime()
-	{
-		return sysUpTime;
-	}
-
-
-	public void setSysUpTime( Long sysUpTime )
-	{
-		this.sysUpTime = sysUpTime;
-	}
-
-
 	public Long getIfIndex()
 	{
 		return ifIndex;
-	}
-
-
-	public void setIfIndex( Long Index )
-	{
-		ifIndex = Index;
 	}
 
 
@@ -108,15 +90,15 @@ public class SNMPInterface
 	}
 
 
-	public Long getIfSpeed()
+	public Long getSysUpTime()
 	{
-		return ifSpeed;
+		return sysUpTime;
 	}
 
 
-	public void setIfSpeed( Long ifSpeed )
+	public Long getIfSpeed()
 	{
-		this.ifSpeed = ifSpeed;
+		return ifSpeed;
 	}
 
 
@@ -126,21 +108,9 @@ public class SNMPInterface
 	}
 
 
-	public void setIfInOctets( Long ifInOctets )
-	{
-		this.ifInOctets = ifInOctets;
-	}
-
-
 	public Long getIfInDiscards()
 	{
 		return ifInDiscards;
-	}
-
-
-	public void setIfInDiscards( Long ifInDiscards )
-	{
-		this.ifInDiscards = ifInDiscards;
 	}
 
 
@@ -150,21 +120,9 @@ public class SNMPInterface
 	}
 
 
-	public void setIfInErrors( Long ifInErrors )
-	{
-		this.ifInErrors = ifInErrors;
-	}
-
-
 	public Long getIfOutOctets()
 	{
 		return ifOutOctets;
-	}
-
-
-	public void setIfOutOctets( Long ifOutOctets )
-	{
-		this.ifOutOctets = ifOutOctets;
 	}
 
 
@@ -174,26 +132,15 @@ public class SNMPInterface
 	}
 
 
-	public void setIfOutDiscards( Long ifOutDiscards )
-	{
-		this.ifOutDiscards = ifOutDiscards;
-	}
-
-
 	public Long getIfOutErrors()
 	{
 		return ifOutErrors;
 	}
 
 
-	public void setIfOutErrors( Long ifOutErrors )
-	{
-		this.ifOutErrors = ifOutErrors;
-	}
-
-
 	/**
 	 * A clearer toString() than the default.
+	 *
 	 * @return a string representing the minimum required elements.
 	 */
 	@Override

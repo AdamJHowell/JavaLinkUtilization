@@ -49,29 +49,44 @@ public class Controller
 
 	// Logging
 	private static final Logger errorLogger = LoggerFactory.getLogger( Main.class );
-	private static List< String > WALK;
 	private static Long IF_INDEX;
 	// Data for the table.
 	private final ObservableList< SNMPInterface > interfaceData = FXCollections.observableArrayList(
 		new SNMPInterface( 42L, "Test data." ),
 		new SNMPInterface( 42L, "Press the..." ),
 		new SNMPInterface( 42L, "'Show Interfaces' button" ) );
-	@FXML private GridPane rootNode;
-	@FXML private TextField firstFile;
-	@FXML private TextField secondFile;
-	@FXML private Button openWalk1Button;
-	@FXML private Button openWalk2Button;
-	@FXML private Button showInterfacesButton;
-	@FXML private TableView< SNMPInterface > interfaceTableView;
-	@FXML private TableColumn< SNMPInterface, String > ifIndexCol;
-	@FXML private TableColumn< SNMPInterface, String > ifDescCol;
-	@FXML private TableView< InterfaceStats > statisticTableView;
-	@FXML private TableColumn< InterfaceStats, String > statDescrCol;
-	@FXML private TableColumn< InterfaceStats, String > statValueCol;
-	@FXML private Label fileLabel;
-	@FXML private Button saveButton;
-	@FXML private Label promptLabel;
-	@FXML private Button exitButton;
+	@FXML
+	private GridPane rootNode;
+	@FXML
+	private TextField firstFile;
+	@FXML
+	private TextField secondFile;
+	@FXML
+	private Button openWalk1Button;
+	@FXML
+	private Button openWalk2Button;
+	@FXML
+	private Button showInterfacesButton;
+	@FXML
+	private TableView< SNMPInterface > interfaceTableView;
+	@FXML
+	private TableColumn< SNMPInterface, String > ifIndexCol;
+	@FXML
+	private TableColumn< SNMPInterface, String > ifDescCol;
+	@FXML
+	private TableView< InterfaceStats > statisticTableView;
+	@FXML
+	private TableColumn< InterfaceStats, String > statDescrCol;
+	@FXML
+	private TableColumn< InterfaceStats, String > statValueCol;
+	@FXML
+	private Label fileLabel;
+	@FXML
+	private Button saveButton;
+	@FXML
+	private Label promptLabel;
+	@FXML
+	private Button exitButton;
 
 
 	/**
@@ -147,7 +162,8 @@ public class Controller
 		if( ifList1.equals( ifList2 ) )
 		{
 			// Populate our map.
-			ifList1.stream().filter( line -> line.startsWith( IF_DESCRIPTION_OID ) ).forEach( line -> {
+			ifList1.stream().filter( line -> line.startsWith( IF_DESCRIPTION_OID ) ).forEach( line ->
+			{
 				// Catch a NumberFormatException from parseLong(), if one occurs.
 				try
 				{
@@ -366,7 +382,6 @@ public class Controller
 	 */
 	private static SNMPInterface BuildCompleteSNMPInterface( List< String > walk, Long ifIndex )
 	{
-		WALK = walk;
 		IF_INDEX = ifIndex;
 		long tempSysUpTime = 0;
 		String tempIfDescr = "";
@@ -467,16 +482,19 @@ public class Controller
 	} // End of BuildCompleteSNMPInterface() method.
 
 
-	@FXML private void exitButtonHandler()
+	@FXML
+	private void exitButtonHandler()
 	{
 		Platform.exit();
 	} // End of handleExitButtonAction() method.
 
 
-	@FXML private void openFirstWalk()
+	@FXML
+	private void openFirstWalk()
 	{
 		// Create a handler for the button that launches FileChooser.
-		openWalk1Button.setOnAction( e -> {
+		openWalk1Button.setOnAction( e ->
+		{
 			String fileName = OpenButtonHandler( "Open first WALK file" );
 			if( fileName != null )
 			{
@@ -486,10 +504,12 @@ public class Controller
 	}
 
 
-	@FXML private void openSecondWalk()
+	@FXML
+	private void openSecondWalk()
 	{
 		// Create a handler for the button that launches FileChooser.
-		openWalk2Button.setOnAction( e -> {
+		openWalk2Button.setOnAction( e ->
+		{
 			String fileName = OpenButtonHandler( "Open second WALK file" );
 			if( fileName != null )
 			{
@@ -506,7 +526,8 @@ public class Controller
 	 * @param title the title to put at the top of the FileChooser dialog window.
 	 * @return the file name chosen by FileChooser.
 	 */
-	@FXML private String OpenButtonHandler( String title )
+	@FXML
+	private String OpenButtonHandler( String title )
 	{
 		Stage primaryStage = ( Stage ) rootNode.getScene().getWindow();
 		FileChooser fileChooser = new FileChooser();
@@ -537,7 +558,8 @@ public class Controller
 	 *
 	 * @param CalculatedUtilization the object that we want to save.
 	 */
-	@FXML private void SaveButtonHandler( ObservableList< InterfaceStats > CalculatedUtilization )
+	@FXML
+	private void SaveButtonHandler( ObservableList< InterfaceStats > CalculatedUtilization )
 	{
 		Stage primaryStage = ( Stage ) rootNode.getScene().getWindow();
 
@@ -577,7 +599,8 @@ public class Controller
 	} // End of SaveButtonHandler() method.
 
 
-	@FXML private void ShowInterfaceButtonHandler()
+	@FXML
+	private void ShowInterfaceButtonHandler()
 	{
 		// Set the button to disabled (again), until an interface is clicked.
 		saveButton.setDisable( true );
@@ -605,24 +628,17 @@ public class Controller
 				// Populate our ListView with content from the interfaces.
 				interfaceTableView.setItems( ObservableIfContainer );
 				// Add a mouse-click event for each row in the table.
-				interfaceTableView.setOnMousePressed( event -> {
+				interfaceTableView.setOnMousePressed( event ->
+				{
 					if( event.isPrimaryButtonDown() )
 					{
 						// Send the first WALK and the selected IF_INDEX to BuildCompleteSNMPInterface.
-						SNMPInterface
-							interface1 =
-							BuildCompleteSNMPInterface( inAL1,
-								interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
+						SNMPInterface interface1 = BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
 						// Send the second WALK and the selected IF_INDEX to BuildCompleteSNMPInterface.
-						SNMPInterface
-							interface2 =
-							BuildCompleteSNMPInterface( inAL2,
-								interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
+						SNMPInterface interface2 = BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
 
 						// Populate our ListView with the return.
-						ObservableList< InterfaceStats >
-							CalculatedUtilization =
-							FXCollections.observableArrayList();
+						ObservableList< InterfaceStats > CalculatedUtilization = FXCollections.observableArrayList();
 						if( interface1.getSysUpTime() < interface2.getSysUpTime() )
 						{
 							CalculatedUtilization = CalculateStatistics( interface1, interface2 );
@@ -633,11 +649,9 @@ public class Controller
 						}
 						else
 						{
-							errorLogger.error(
-								"Invalid data, time stamps on the two WALK files are identical!" );
+							errorLogger.error( "Invalid data, time stamps on the two WALK files are identical!" );
 							errorLogger.error( "This happened in the statisticTableView event handler." );
-							CalculatedUtilization.addAll( new InterfaceStats( "Unable to calculate utilization",
-								"The time stamps on the two files are identical" ) );
+							CalculatedUtilization.addAll( new InterfaceStats( "Unable to calculate utilization", "The time stamps on the two files are identical" ) );
 						}
 						// Assign each column to a class data member.
 						statDescrCol.setCellValueFactory( new PropertyValueFactory<>( "description" ) );
@@ -695,7 +709,8 @@ public class Controller
 	 * InvalidButtonAlert
 	 * This method will display an error dialog pop-up indicating that the button is not yet ready to use.
 	 */
-	@FXML private void InvalidButtonAlert()
+	@FXML
+	private void InvalidButtonAlert()
 	{
 		errorLogger.error( "The save button was clicked before it was ready." );
 		// Create a pop-up alert to signal that this button is not available yet.
@@ -709,7 +724,8 @@ public class Controller
 
 
 	// This method is called by the FXMLLoader when initialization is complete
-	@FXML void initialize()
+	@FXML
+	void initialize()
 	{
 		assert rootNode != null : "fx:id=\"rootNode\" was not injected: check your FXML file 'RootLayout.fxml'.";
 		assert firstFile != null : "fx:id=\"firstFile\" was not injected: check your FXML file 'RootLayout.fxml'.";
