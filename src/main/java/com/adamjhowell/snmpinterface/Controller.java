@@ -49,7 +49,6 @@ public class Controller
 
 	// Logging
 	private static final Logger errorLogger = LoggerFactory.getLogger( Main.class );
-	private static Long IF_INDEX;
 	// Data for the table.
 	private final ObservableList< SNMPInterface > interfaceData = FXCollections.observableArrayList(
 		new SNMPInterface( 42L, "Test data." ),
@@ -149,14 +148,9 @@ public class Controller
 	private static ObservableList< SNMPInterface > FindInterfaces( List< String > walk1, List< String > walk2 )
 	{
 		ObservableList< SNMPInterface > ifListAL = FXCollections.observableArrayList();
-		List< String > ifList1 = new ArrayList<>();
-		List< String > ifList2 = new ArrayList<>();
-
 		// Add every line with an interface description OID.
-		ifList1.addAll(
-			walk1.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() ) );
-		ifList2.addAll(
-			walk2.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() ) );
+		List< String > ifList1 = walk1.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() );
+		List< String > ifList2 = walk2.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() );
 
 		// If the two walks have the same interface description OIDs, we can proceed.
 		if( ifList1.equals( ifList2 ) )
@@ -189,8 +183,7 @@ public class Controller
 		}
 		else
 		{
-			errorLogger.error(
-				"The SNMP walks appear to be from different machines.  This will prevent any calculations." );
+			errorLogger.error( "The SNMP walks appear to be from different machines.  This will prevent any calculations." );
 			return null;
 		}
 	} // End of FindInterfaces() method.
@@ -310,8 +303,7 @@ public class Controller
 			{
 				// This should never be reached because I check for invalid time stamps above.
 				errorLogger.error( "Invalid data, no time has passed between walks!" );
-				statsAL.add(
-					new InterfaceStats( "Unable to calculate utilization", "no time has passed between walks" ) );
+				statsAL.add( new InterfaceStats( "Unable to calculate utilization", "no time has passed between walks" ) );
 			}
 			if( walk1.getIfSpeed() == 0 )
 			{
@@ -382,7 +374,6 @@ public class Controller
 	 */
 	private static SNMPInterface BuildCompleteSNMPInterface( List< String > walk, Long ifIndex )
 	{
-		IF_INDEX = ifIndex;
 		long tempSysUpTime = 0;
 		String tempIfDescr = "";
 		long tempIfSpeed = 0;
@@ -730,12 +721,9 @@ public class Controller
 		assert rootNode != null : "fx:id=\"rootNode\" was not injected: check your FXML file 'RootLayout.fxml'.";
 		assert firstFile != null : "fx:id=\"firstFile\" was not injected: check your FXML file 'RootLayout.fxml'.";
 		assert secondFile != null : "fx:id=\"secondFile\" was not injected: check your FXML file 'RootLayout.fxml'.";
-		assert openWalk1Button != null :
-			"fx:id=\"openWalk2Button\" was not injected: check your FXML file 'RootLayout.fxml'.";
-		assert openWalk2Button != null :
-			"fx:id=\"openWalk2Button\" was not injected: check your FXML file 'RootLayout.fxml'.";
-		assert showInterfacesButton != null :
-			"fx:id=\"showInterfacesButton\" was not injected: check your FXML file 'RootLayout.fxml'.";
+		assert openWalk1Button != null : "fx:id=\"openWalk2Button\" was not injected: check your FXML file 'RootLayout.fxml'.";
+		assert openWalk2Button != null : "fx:id=\"openWalk2Button\" was not injected: check your FXML file 'RootLayout.fxml'.";
+		assert showInterfacesButton != null : "fx:id=\"showInterfacesButton\" was not injected: check your FXML file 'RootLayout.fxml'.";
 		assert ifIndexCol != null : "fx:id=\"ifIndexCol\" was not injected: check your FXML file 'RootLayout.fxml'.";
 		assert ifDescCol != null : "fx:id=\"ifDescCol\" was not injected: check your FXML file 'RootLayout.fxml'.";
 		assert fileLabel != null : "fx:id=\"fileLabel\" was not injected: check your FXML file 'RootLayout.fxml'.";
