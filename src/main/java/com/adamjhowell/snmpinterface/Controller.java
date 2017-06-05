@@ -2,7 +2,7 @@ package com.adamjhowell.snmpinterface;
 
 
 import com.adamjhowell.snmpinterface.model.InterfaceStats;
-import com.adamjhowell.snmpinterface.model.SNMPInterface;
+import com.adamjhowell.snmpinterface.model.SnmpInterface;
 import com.google.gson.Gson;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -49,47 +49,31 @@ public class Controller
 
 	// Logging
 	private static final Logger errorLogger = LoggerFactory.getLogger( Main.class );
-	// Data for the table.
-	private final ObservableList< SNMPInterface > interfaceData = FXCollections.observableArrayList(
-		new SNMPInterface( 42L, "Test data." ),
-		new SNMPInterface( 42L, "Press the..." ),
-		new SNMPInterface( 42L, "'Show Interfaces' button" ) );
-	@FXML
-	private GridPane rootNode;
-	@FXML
-	private TextField firstFile;
-	@FXML
-	private TextField secondFile;
-	@FXML
-	private Button openWalk1Button;
-	@FXML
-	private Button openWalk2Button;
-	@FXML
-	private Button showInterfacesButton;
-	@FXML
-	private TableView< SNMPInterface > interfaceTableView;
-	@FXML
-	private TableColumn< SNMPInterface, String > ifIndexCol;
-	@FXML
-	private TableColumn< SNMPInterface, String > ifDescCol;
-	@FXML
-	private TableView< InterfaceStats > statisticTableView;
-	@FXML
-	private TableColumn< InterfaceStats, String > statDescrCol;
-	@FXML
-	private TableColumn< InterfaceStats, String > statValueCol;
-	@FXML
-	private Label fileLabel;
-	@FXML
-	private Button saveButton;
-	@FXML
-	private Label promptLabel;
-	@FXML
-	private Button exitButton;
+	// Sample data for the interface table.
+	private final ObservableList< SnmpInterface > interfaceObservableData = FXCollections.observableArrayList(
+		new SnmpInterface( 42L, "Sample data." ),
+		new SnmpInterface( 42L, "Press the..." ),
+		new SnmpInterface( 42L, "...'Show Interfaces' button" ) );
+	@FXML private GridPane rootNode;
+	@FXML private TextField firstFile;
+	@FXML private TextField secondFile;
+	@FXML private Button openWalk1Button;
+	@FXML private Button openWalk2Button;
+	@FXML private Button showInterfacesButton;
+	@FXML private TableView< SnmpInterface > interfaceTableView;
+	@FXML private TableColumn< SnmpInterface, String > ifIndexCol;
+	@FXML private TableColumn< SnmpInterface, String > ifDescCol;
+	@FXML private TableView< InterfaceStats > statisticTableView;
+	@FXML private TableColumn< InterfaceStats, String > statDescrCol;
+	@FXML private TableColumn< InterfaceStats, String > statValueCol;
+	@FXML private Label fileLabel;
+	@FXML private Button saveButton;
+	@FXML private Label promptLabel;
+	@FXML private Button exitButton;
 
 
 	/**
-	 * ReadFile
+	 * readFile
 	 * Created by Adam Howell on 2016-05-04.
 	 * This method will take a String representing a file name, and attempt to open it.
 	 * If the file can be opened, every line within that file will be read into an ArrayList.
@@ -99,7 +83,7 @@ public class Controller
 	 * @param inFileName a String representing a file to open.
 	 * @return an ArrayList containing every line from the opened file.
 	 */
-	private static List< String > ReadFile( String inFileName )
+	private static List< String > readFile( String inFileName )
 	{
 		String line;
 		List< String > inAL = new ArrayList<>();
@@ -131,32 +115,32 @@ public class Controller
 			ioe.getLocalizedMessage();
 		}
 		return null;
-	} // End of ReadFile() method.
+	} // End of readFile() method.
 
 
 	/**
-	 * FindInterfaces
+	 * findInterfaces
 	 * Created by Adam Howell on 2016-05-05.
-	 * This will create two ArrayLists and add every line that begins with a specific OID.
+	 * This will create two ArrayLists, one from each walk, and add every line that begins with a specific OID.
 	 * If those ArrayLists are identical, then it will find the IF_INDEX and ifDescr for each interface,
-	 * create a SNMPInterface class object from them, and return an ArrayList of those objects.
+	 * create a SnmpInterface class object from them, and return an ArrayList of those objects.
 	 *
 	 * @param walk1 the first WALK to search through.
 	 * @param walk2 the second WALK to search through.
-	 * @return an ObservableList of discovered interfaces.
+	 * @return an ObservableList of discovered indexes and descriptions.
 	 */
-	private static ObservableList< SNMPInterface > FindInterfaces( List< String > walk1, List< String > walk2 )
+	private static ObservableList< SnmpInterface > findInterfaces( List< String > walk1, List< String > walk2 )
 	{
-		ObservableList< SNMPInterface > ifListAL = FXCollections.observableArrayList();
+		ObservableList< SnmpInterface > observableIfIndexIfDescList = FXCollections.observableArrayList();
 		// Add every line with an interface description OID.
-		List< String > ifList1 = walk1.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() );
-		List< String > ifList2 = walk2.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() );
+		List< String > ifDescList1 = walk1.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() );
+		List< String > ifDescList2 = walk2.stream().filter( line -> line.contains( IF_DESCRIPTION_OID ) ).collect( Collectors.toList() );
 
 		// If the two walks have the same interface description OIDs, we can proceed.
-		if( ifList1.equals( ifList2 ) )
+		if( ifDescList1.equals( ifDescList2 ) )
 		{
 			// Populate our map.
-			ifList1.stream().filter( line -> line.startsWith( IF_DESCRIPTION_OID ) ).forEach( line ->
+			ifDescList1.stream().filter( line -> line.startsWith( IF_DESCRIPTION_OID ) ).forEach( line ->
 			{
 				// Catch a NumberFormatException from parseLong(), if one occurs.
 				try
@@ -167,8 +151,8 @@ public class Controller
 					// The interface description is in quotes, will start after the equal sign, and go to the end of the line.
 					String ifDescr = line.substring( line.indexOf( " = " ) + 12, line.length() - 1 );
 
-					// Create a SNMPInterface class object from those values.
-					ifListAL.add( new SNMPInterface( ifIndex, ifDescr ) );
+					// Create a SnmpInterface class object from those values.
+					observableIfIndexIfDescList.add( new SnmpInterface( ifIndex, ifDescr ) );
 				}
 				catch( NumberFormatException nfe )
 				{
@@ -179,41 +163,29 @@ public class Controller
 			} );
 
 			// Return the populated container.
-			return ifListAL;
+			return observableIfIndexIfDescList;
 		}
 		else
 		{
 			errorLogger.error( "The SNMP walks appear to be from different machines.  This will prevent any calculations." );
 			return null;
 		}
-	} // End of FindInterfaces() method.
+	} // End of findInterfaces() method.
 
 
 	/**
-	 * CalculateStatistics
+	 * calculateStatistics
 	 * Created by Adam Howell on 2016-05-10.
 	 * This will analyze two data containers and produce human-readable output related to
 	 * the differences between those containers.
 	 *
-	 * @param walk1 the output from BuildCompleteSNMPInterface for the first WALK.
-	 * @param walk2 the output from BuildCompleteSNMPInterface for the second WALK.
+	 * @param walk1 the output from buildCompleteSNMPInterface for the first WALK.
+	 * @param walk2 the output from buildCompleteSNMPInterface for the second WALK.
 	 * @return an ObservableList containing all of the statistics for interface.
 	 */
-	private static ObservableList< InterfaceStats > CalculateStatistics( SNMPInterface walk1, SNMPInterface walk2 )
+	private static ObservableList< InterfaceStats > calculateStatistics( SnmpInterface walk1, SnmpInterface walk2 )
 	{
 		// The generic formula for inUtilization is: ( delta-octets * 8 * 10 ) / ( delta-seconds * ifSpeed )
-		Long inOctetDelta;
-		Long outOctetDelta;
-		Long totalOctetDelta;
-		Long inDiscardDelta;
-		Long outDiscardDelta;
-		Long totalDiscardDelta;
-		Long inErrorDelta;
-		Long outErrorDelta;
-		Long totalErrorDelta;
-		Double inUtilization;
-		Double outUtilization;
-		Double totalUtilization;
 		ObservableList< InterfaceStats > statsAL = FXCollections.observableArrayList();
 		NumberFormat nf_us = NumberFormat.getInstance( Locale.US );
 
@@ -248,7 +220,7 @@ public class Controller
 		}
 
 		// Get the inOctet delta.
-		inOctetDelta = walk2.getIfInOctets() - walk1.getIfInOctets();
+		Long inOctetDelta = walk2.getIfInOctets() - walk1.getIfInOctets();
 		// If a 'counter wrap' occurred.
 		if( inOctetDelta < 0 )
 		{
@@ -257,44 +229,35 @@ public class Controller
 		statsAL.add( new InterfaceStats( "Inbound Octet Delta", nf_us.format( inOctetDelta ) ) );
 
 		// Get the outOctet delta.
-		outOctetDelta = walk2.getIfOutOctets() - walk1.getIfOutOctets();
+		Long outOctetDelta = walk2.getIfOutOctets() - walk1.getIfOutOctets();
 		// If a 'counter wrap' occurred.
 		if( outOctetDelta < 0 )
 		{
 			outOctetDelta += COUNTER32MAX;
 		}
 		statsAL.add( new InterfaceStats( "Outbound Octet Delta", nf_us.format( outOctetDelta ) ) );
-		totalOctetDelta = inOctetDelta + outOctetDelta;
+		Long totalOctetDelta = inOctetDelta + outOctetDelta;
 		statsAL.add( new InterfaceStats( "Total Delta", ( nf_us.format( totalOctetDelta ) ) ) );
 
 		// Calculate inUtilization and outUtilization.  Avoid divide-by-zero errors.
 		if( ( walk2.getSysUpTime() - walk1.getSysUpTime() ) != 0 && walk1.getIfSpeed() != 0 )
 		{
 			// Calculate the inUtilization.
-			inUtilization =
-				( double ) ( inOctetDelta * 8 * 100 ) /
-					( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
+			Double inUtilization = ( double ) ( inOctetDelta * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Format the double to 3 decimal places.
-			Double inTruncatedDouble =
-				new BigDecimal( inUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
+			Double inTruncatedDouble = new BigDecimal( inUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
 			statsAL.add( new InterfaceStats( "Inbound Utilization", nf_us.format( inTruncatedDouble ) ) );
 
 			// Calculate the outUtilization.
-			outUtilization =
-				( double ) ( outOctetDelta * 8 * 100 ) /
-					( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
+			Double outUtilization = ( double ) ( outOctetDelta * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Format the double to 3 decimal places.
-			Double outTruncatedDouble =
-				new BigDecimal( outUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
+			Double outTruncatedDouble = new BigDecimal( outUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
 			statsAL.add( new InterfaceStats( "Outbound Utilization", nf_us.format( outTruncatedDouble ) ) );
 
 			// Calculate the totalUtilization.
-			totalUtilization = ( ( ( totalOctetDelta ) * 8 * 100 ) /
-				( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() ) /
-				2 );
+			Double totalUtilization = ( ( ( totalOctetDelta ) * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() ) / 2 );
 			// Format the double to 3 decimal places.
-			Double totalTruncatedDouble =
-				new BigDecimal( totalUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
+			Double totalTruncatedDouble = new BigDecimal( totalUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
 			statsAL.add( new InterfaceStats( "Total Utilization", nf_us.format( totalTruncatedDouble ) ) );
 		}
 		else
@@ -314,7 +277,7 @@ public class Controller
 		}
 
 		// Calculate inbound discard delta.
-		inDiscardDelta = walk2.getIfInDiscards() - walk1.getIfInDiscards();
+		Long inDiscardDelta = walk2.getIfInDiscards() - walk1.getIfInDiscards();
 		// If a 'counter wrap' occurred.
 		if( inDiscardDelta < 0 )
 		{
@@ -323,7 +286,7 @@ public class Controller
 		statsAL.add( new InterfaceStats( "Inbound Discards", nf_us.format( inDiscardDelta ) ) );
 
 		// Calculate outbound discard delta.
-		outDiscardDelta = walk2.getIfOutDiscards() - walk1.getIfOutDiscards();
+		Long outDiscardDelta = walk2.getIfOutDiscards() - walk1.getIfOutDiscards();
 		// If a 'counter wrap' occurred.
 		if( outDiscardDelta < 0 )
 		{
@@ -332,11 +295,11 @@ public class Controller
 		statsAL.add( new InterfaceStats( "Outbound Discards", nf_us.format( outDiscardDelta ) ) );
 
 		// Calculate total discard delta.
-		totalDiscardDelta = inDiscardDelta + outDiscardDelta;
+		Long totalDiscardDelta = inDiscardDelta + outDiscardDelta;
 		statsAL.add( new InterfaceStats( "Total Discards", nf_us.format( totalDiscardDelta ) ) );
 
 		// Calculate inbound error delta.
-		inErrorDelta = walk2.getIfInErrors() - walk1.getIfInErrors();
+		Long inErrorDelta = walk2.getIfInErrors() - walk1.getIfInErrors();
 		// If a 'counter wrap' occurred.
 		if( inErrorDelta < 0 )
 		{
@@ -345,7 +308,7 @@ public class Controller
 		statsAL.add( new InterfaceStats( "Inbound Errors", nf_us.format( inErrorDelta ) ) );
 
 		// Calculate outbound error delta.
-		outErrorDelta = walk2.getIfOutErrors() - walk1.getIfOutErrors();
+		Long outErrorDelta = walk2.getIfOutErrors() - walk1.getIfOutErrors();
 		// If a 'counter wrap' occurred.
 		if( outErrorDelta < 0 )
 		{
@@ -354,25 +317,24 @@ public class Controller
 		statsAL.add( new InterfaceStats( "Outbound Errors", nf_us.format( outErrorDelta ) ) );
 
 		// Calculate total error delta.
-		totalErrorDelta = inErrorDelta + outErrorDelta;
+		Long totalErrorDelta = inErrorDelta + outErrorDelta;
 		statsAL.add( new InterfaceStats( "Total Errors", nf_us.format( totalErrorDelta ) ) );
 
-		//return "Link inUtilization for " + walk1.getIfDescr() + "\n" + inUtilization.toString();
 		return statsAL;
-	} // End of CalculateStatistics() method.
+	} // End of calculateStatistics() method.
 
 
 	/**
-	 * BuildCompleteSNMPInterface
+	 * buildCompleteSNMPInterface
 	 * Created by Adam Howell on 2016-05-10.
 	 * This method will find all pertinent stats for a single SNMP Interface, and return an object containing that data.
 	 * The returned object will also contain the System UpTime from that WALK.
 	 *
 	 * @param walk    an ArrayList containing every line from a SNMP WALK file.
 	 * @param ifIndex the SNMP Interface Index to build.
-	 * @return a SNMPInterface class object that represents the details for the requested interface.
+	 * @return a SnmpInterface class object that represents the details for the requested interface.
 	 */
-	private static SNMPInterface BuildCompleteSNMPInterface( List< String > walk, Long ifIndex )
+	private static SnmpInterface buildCompleteSNMPInterface( List< String > walk, Long ifIndex )
 	{
 		long tempSysUpTime = 0;
 		String tempIfDescr = "";
@@ -468,57 +430,19 @@ public class Controller
 				}
 			}
 		}
-		return new SNMPInterface( ifIndex, tempIfDescr, tempSysUpTime, tempIfSpeed, tempIfInOctets, tempIfInDiscards,
+		return new SnmpInterface( ifIndex, tempIfDescr, tempSysUpTime, tempIfSpeed, tempIfInOctets, tempIfInDiscards,
 			tempIfInErrors, tempIfOutOctets, tempIfOutDiscards, tempIfOutErrors );
-	} // End of BuildCompleteSNMPInterface() method.
-
-
-	@FXML
-	private void exitButtonHandler()
-	{
-		Platform.exit();
-	} // End of handleExitButtonAction() method.
-
-
-	@FXML
-	private void openFirstWalk()
-	{
-		// Create a handler for the button that launches FileChooser.
-		openWalk1Button.setOnAction( e ->
-		{
-			String fileName = OpenButtonHandler( "Open first WALK file" );
-			if( fileName != null )
-			{
-				firstFile.setText( fileName );
-			}
-		} );
-	}
-
-
-	@FXML
-	private void openSecondWalk()
-	{
-		// Create a handler for the button that launches FileChooser.
-		openWalk2Button.setOnAction( e ->
-		{
-			String fileName = OpenButtonHandler( "Open second WALK file" );
-			if( fileName != null )
-			{
-				secondFile.setText( fileName );
-			}
-		} );
-	}
+	} // End of buildCompleteSNMPInterface() method.
 
 
 	/**
-	 * OpenButtonHandler
+	 * openButtonHandler
 	 * This method will create a handler for the open file buttons.
 	 *
 	 * @param title the title to put at the top of the FileChooser dialog window.
 	 * @return the file name chosen by FileChooser.
 	 */
-	@FXML
-	private String OpenButtonHandler( String title )
+	@FXML private String openButtonHandler( String title )
 	{
 		Stage primaryStage = ( Stage ) rootNode.getScene().getWindow();
 		FileChooser fileChooser = new FileChooser();
@@ -540,17 +464,16 @@ public class Controller
 		{
 			return null;
 		}
-	} // End of OpenButtonHandler() method.
+	} // End of openButtonHandler() method.
 
 
 	/**
-	 * SaveButtonHandler
+	 * saveButtonHandler
 	 * This method will create a handler for the save file button.
 	 *
 	 * @param CalculatedUtilization the object that we want to save.
 	 */
-	@FXML
-	private void SaveButtonHandler( ObservableList< InterfaceStats > CalculatedUtilization )
+	@FXML private void saveButtonHandler( ObservableList< InterfaceStats > CalculatedUtilization )
 	{
 		Stage primaryStage = ( Stage ) rootNode.getScene().getWindow();
 
@@ -564,7 +487,11 @@ public class Controller
 		// Implement the FileChooser as a save dialog over the stage.
 		File selectedFile = fileChooser.showSaveDialog( primaryStage );
 
-		if( selectedFile != null )
+		if( selectedFile == null )
+		{
+			errorLogger.info( "Save file dialog was cancelled." );
+		}
+		else
 		{
 			try
 			{
@@ -583,34 +510,29 @@ public class Controller
 				ioe.printStackTrace();
 			}
 		}
-		else
-		{
-			errorLogger.info( "Save file dialog was cancelled." );
-		}
-	} // End of SaveButtonHandler() method.
+	} // End of saveButtonHandler() method.
 
 
-	@FXML
-	private void ShowInterfaceButtonHandler()
+	@FXML private void showInterfaceButtonHandler()
 	{
 		// Set the button to disabled (again), until an interface is clicked.
 		saveButton.setDisable( true );
 
 		// Read in each file and populate our ArrayLists.
-		List< String > inAL1 = ReadFile( firstFile.getText() );
-		List< String > inAL2 = ReadFile( secondFile.getText() );
+		List< String > inAL1 = readFile( firstFile.getText() );
+		List< String > inAL2 = readFile( secondFile.getText() );
 
 		promptLabel.setText( "Click on a row above for interface details." );
 
 		statisticTableView.setItems( null );
 
-		// Check that neither ReadFile returned a null.
+		// Check that neither readFile returned a null.
 		if( inAL1 != null && inAL2 != null )
 		{
-			// Create an ObservableList of SNMPInterface objects from those files.
-			ObservableList< SNMPInterface > ObservableIfContainer = FindInterfaces( inAL1, inAL2 );
+			// Create an ObservableList of SnmpInterface objects from those files.
+			ObservableList< SnmpInterface > ObservableIfContainer = findInterfaces( inAL1, inAL2 );
 
-			// Check that FindInterfaces did not return a null.
+			// Check that findInterfaces did not return a null.
 			if( ObservableIfContainer != null )
 			{
 				// Clear the file warning label.
@@ -623,25 +545,28 @@ public class Controller
 				{
 					if( event.isPrimaryButtonDown() )
 					{
-						// Send the first WALK and the selected IF_INDEX to BuildCompleteSNMPInterface.
-						SNMPInterface interface1 = BuildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
-						// Send the second WALK and the selected IF_INDEX to BuildCompleteSNMPInterface.
-						SNMPInterface interface2 = BuildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
+						// Send the first WALK and the selected IF_INDEX to buildCompleteSNMPInterface.
+						SnmpInterface interface1 = buildCompleteSNMPInterface( inAL1, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
+						// Send the second WALK and the selected IF_INDEX to buildCompleteSNMPInterface.
+						SnmpInterface interface2 = buildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
 
 						// Populate our ListView with the return.
 						ObservableList< InterfaceStats > CalculatedUtilization = FXCollections.observableArrayList();
 						if( interface1.getSysUpTime() < interface2.getSysUpTime() )
 						{
-							CalculatedUtilization = CalculateStatistics( interface1, interface2 );
+							CalculatedUtilization = calculateStatistics( interface1, interface2 );
 						}
 						else if( interface1.getSysUpTime() > interface2.getSysUpTime() )
 						{
-							CalculatedUtilization = CalculateStatistics( interface2, interface1 );
+							CalculatedUtilization = calculateStatistics( interface2, interface1 );
 						}
 						else
 						{
 							errorLogger.error( "Invalid data, time stamps on the two WALK files are identical!" );
-							errorLogger.error( "This happened in the statisticTableView event handler." );
+							if( DEBUG )
+							{
+								errorLogger.error( "This happened in the statisticTableView event handler." );
+							}
 							CalculatedUtilization.addAll( new InterfaceStats( "Unable to calculate utilization", "The time stamps on the two files are identical" ) );
 						}
 						// Assign each column to a class data member.
@@ -655,7 +580,7 @@ public class Controller
 						saveButton.setDisable( false );
 						final ObservableList< InterfaceStats > finalCalculatedUtilization = CalculatedUtilization;
 						// Save the stats to a file.
-						saveButton.setOnAction( clickEvent -> SaveButtonHandler( finalCalculatedUtilization ) );
+						saveButton.setOnAction( clickEvent -> saveButtonHandler( finalCalculatedUtilization ) );
 					}
 				} );
 			}
@@ -684,7 +609,7 @@ public class Controller
 			}
 			errorLogger.error( "The first WALK file " + fileName + " could not be opened." );
 
-			errorLogger.error( "Invalid data, selected file does not exist!" );
+			errorLogger.error( "Invalid file, does not exist!" );
 			// Create a pop-up alert to signal that a file name was invalid.
 			Alert alert = new Alert( Alert.AlertType.ERROR );
 			alert.setTitle( "File Error" );
@@ -693,15 +618,14 @@ public class Controller
 
 			alert.showAndWait();
 		}
-	} // End of ShowInterfaceButtonHandler() method.
+	} // End of showInterfaceButtonHandler() method.
 
 
 	/**
-	 * InvalidButtonAlert
+	 * invalidButtonAlert
 	 * This method will display an error dialog pop-up indicating that the button is not yet ready to use.
 	 */
-	@FXML
-	private void InvalidButtonAlert()
+	@FXML private void invalidButtonAlert()
 	{
 		errorLogger.error( "The save button was clicked before it was ready." );
 		// Create a pop-up alert to signal that this button is not available yet.
@@ -711,12 +635,11 @@ public class Controller
 		alert.setContentText( "Click on an interface first." );
 
 		alert.showAndWait();
-	} // End of InvalidButtonAlert() method.
+	} // End of invalidButtonAlert() method.
 
 
 	// This method is called by the FXMLLoader when initialization is complete
-	@FXML
-	void initialize()
+	@FXML void initialize()
 	{
 		assert rootNode != null : "fx:id=\"rootNode\" was not injected: check your FXML file 'RootLayout.fxml'.";
 		assert firstFile != null : "fx:id=\"firstFile\" was not injected: check your FXML file 'RootLayout.fxml'.";
@@ -729,22 +652,37 @@ public class Controller
 		assert fileLabel != null : "fx:id=\"fileLabel\" was not injected: check your FXML file 'RootLayout.fxml'.";
 		assert saveButton != null : "fx:id=\"saveButton\" was not injected: check your FXML file 'RootLayout.fxml'.";
 
-		// initialize your logic here: all @FXML variables will have been injected
-		openWalk1Button.setOnAction( event -> openFirstWalk() );
-		openWalk2Button.setOnAction( event -> openSecondWalk() );
-		showInterfacesButton.setOnAction( event -> ShowInterfaceButtonHandler() );
-		saveButton.setOnAction( event -> InvalidButtonAlert() );
-		exitButton.setOnAction( event -> exitButtonHandler() );
+		// Assign handlers for each button.
+		openWalk1Button.setOnAction( e ->
+		{
+			String fileName = openButtonHandler( "Open first WALK file" );
+			if( fileName != null )
+			{
+				firstFile.setText( fileName );
+			}
+		} );
+		openWalk2Button.setOnAction( e ->
+		{
+			String fileName = openButtonHandler( "Open second WALK file" );
+			if( fileName != null )
+			{
+				secondFile.setText( fileName );
+			}
+		} );
+		showInterfacesButton.setOnAction( event -> showInterfaceButtonHandler() );
+		saveButton.setOnAction( event -> invalidButtonAlert() );
+		exitButton.setOnAction( event -> Platform.exit() );
 
-		// Make the tables unmodifiable.
+		// Make the tables uneditable.
 		interfaceTableView.setEditable( false );
 		statisticTableView.setEditable( false );
 
-		// Create a column for the SNMP interface indices.
-		ifIndexCol.setCellValueFactory( new PropertyValueFactory<>( "IF_INDEX" ) );
-		// Create a column for the SNMP interface descriptions.
+		// Create a column for the SNMP interface indices.  The name passed to the PropertyValueFactory needs to match the getter in the SnmpInterface class.
+		ifIndexCol.setCellValueFactory( new PropertyValueFactory<>( "ifIndex" ) );
+		// Create a column for the SNMP interface descriptions.  The name passed to the PropertyValueFactory needs to match the getter in the SnmpInterface class.
 		ifDescCol.setCellValueFactory( new PropertyValueFactory<>( "ifDescr" ) );
 
-		interfaceTableView.setItems( interfaceData );
+		// Assign the interface table to sample data.
+		interfaceTableView.setItems( interfaceObservableData );
 	} // End of initialize() method.
 }

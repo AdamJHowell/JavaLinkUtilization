@@ -13,7 +13,7 @@ package com.adamjhowell.snmpinterface.model;
  * The ifIndex class member will go into column 1, named "Index".
  * The ifDescr class member will go into column 2, named "Description".
  */
-public class SNMPInterface
+public class SnmpInterface
 {
 	private Long ifIndex;
 	private String ifDescr;
@@ -41,16 +41,7 @@ public class SNMPInterface
 	 * @param ifOutDiscards the interface outbound discard count from the SNMP walk.
 	 * @param ifOutErrors   the interface outbound error count from the SNMP walk.
 	 */
-	public SNMPInterface( Long ifIndex,
-	                      String ifDescr,
-	                      Long sysUpTime,
-	                      Long ifSpeed,
-	                      Long ifInOctets,
-	                      Long ifInDiscards,
-	                      Long ifInErrors,
-	                      Long ifOutOctets,
-	                      Long ifOutDiscards,
-	                      Long ifOutErrors )
+	public SnmpInterface( Long ifIndex, String ifDescr, Long sysUpTime, Long ifSpeed, Long ifInOctets, Long ifInDiscards, Long ifInErrors, Long ifOutOctets, Long ifOutDiscards, Long ifOutErrors )
 	{
 		this.ifIndex = ifIndex;
 		this.ifDescr = ifDescr;
@@ -71,7 +62,7 @@ public class SNMPInterface
 	 * @param ifIndex the interface index number from the SNMP walk.
 	 * @param ifDescr the interface description from the SNMP walk.
 	 */
-	public SNMPInterface( Long ifIndex, String ifDescr )
+	public SnmpInterface( Long ifIndex, String ifDescr )
 	{
 		this.ifIndex = ifIndex;
 		this.ifDescr = ifDescr;
@@ -84,6 +75,13 @@ public class SNMPInterface
 	}
 
 
+	/**
+	 * getIfDescr is required for the PropertyValueFactory to function.
+	 * If you delete this, you are going to have a bad time.
+	 *
+	 * @return the interface description.
+	 */
+	@SuppressWarnings( "unused" )
 	public String getIfDescr()
 	{
 		return ifDescr;

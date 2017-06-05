@@ -31,6 +31,7 @@ public class InterfaceStats
 	 *
 	 * @return the text description to display.
 	 */
+	@SuppressWarnings( "unused" )
 	public String getDescription()
 	{
 		return description;
@@ -39,8 +40,10 @@ public class InterfaceStats
 
 	/**
 	 * Since this class is used as an adapter, getters are required to operate properly.
+	 *
 	 * @return the text value to display.
 	 */
+	@SuppressWarnings( "unused" )
 	public String getValue()
 	{
 		return value;
@@ -49,6 +52,7 @@ public class InterfaceStats
 
 	/**
 	 * I wanted a cleaner toString().
+	 *
 	 * @return a string representing the object.
 	 */
 	@Override
