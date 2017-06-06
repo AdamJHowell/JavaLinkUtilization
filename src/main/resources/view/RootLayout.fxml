@@ -3,66 +3,66 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<GridPane xmlns:fx = "http://javafx.com/fxml/1" fx:id = "rootNode" hgap = "5.0" vgap = "5.0"
-          xmlns = "http://javafx.com/javafx/8.0.65" fx:controller = "com.adamjhowell.snmpinterface.Controller">
+<GridPane xmlns:fx="http://javafx.com/fxml/1" fx:id="rootNode" hgap="5.0" vgap="5.0"
+          xmlns="http://javafx.com/javafx/8.0.65" fx:controller="com.adamjhowell.snmpinterface.Controller">
 	<columnConstraints>
-		<ColumnConstraints hgrow = "SOMETIMES" maxWidth = "40.0" minWidth = "40.0" prefWidth = "40.0"/>
-		<ColumnConstraints hgrow = "SOMETIMES" maxWidth = "200.0" minWidth = "100.0" prefWidth = "150.0"/>
-		<ColumnConstraints hgrow = "SOMETIMES" maxWidth = "350.0" minWidth = "150.0" prefWidth = "200.0"/>
-		<ColumnConstraints hgrow = "SOMETIMES" maxWidth = "30.0" minWidth = "30.0" prefWidth = "30.0"/>
-		<ColumnConstraints hgrow = "SOMETIMES" maxWidth = "40.0" minWidth = "40.0" prefWidth = "40.0"/>
+		<ColumnConstraints hgrow="SOMETIMES" maxWidth="40.0" minWidth="40.0" prefWidth="40.0" />
+		<ColumnConstraints hgrow="SOMETIMES" maxWidth="200.0" minWidth="100.0" prefWidth="150.0" />
+		<ColumnConstraints hgrow="SOMETIMES" maxWidth="350.0" minWidth="150.0" prefWidth="200.0" />
+		<ColumnConstraints hgrow="SOMETIMES" maxWidth="30.0" minWidth="30.0" prefWidth="30.0" />
+		<ColumnConstraints hgrow="SOMETIMES" maxWidth="40.0" minWidth="40.0" prefWidth="40.0" />
 	</columnConstraints>
 	<rowConstraints>
-		<RowConstraints maxHeight = "30.0" minHeight = "30.0" prefHeight = "30.0" vgrow = "SOMETIMES"/>
-		<RowConstraints maxHeight = "30.0" minHeight = "30.0" prefHeight = "30.0" vgrow = "SOMETIMES"/>
-		<RowConstraints maxHeight = "30.0" minHeight = "30.0" prefHeight = "30.0" vgrow = "SOMETIMES"/>
-		<RowConstraints maxHeight = "400.0" minHeight = "100.0" prefHeight = "200.0" vgrow = "SOMETIMES"/>
-		<RowConstraints maxHeight = "30.0" minHeight = "30.0" prefHeight = "30.0" vgrow = "SOMETIMES"/>
-		<RowConstraints maxHeight = "400.0" minHeight = "100.0" prefHeight = "200.0" vgrow = "SOMETIMES"/>
-		<RowConstraints maxHeight = "30.0" minHeight = "30.0" prefHeight = "30.0" vgrow = "SOMETIMES"/>
+		<RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+		<RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+		<RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+		<RowConstraints maxHeight="400.0" minHeight="100.0" prefHeight="200.0" vgrow="SOMETIMES" />
+		<RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+		<RowConstraints maxHeight="400.0" minHeight="100.0" prefHeight="200.0" vgrow="SOMETIMES" />
+		<RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
 	</rowConstraints>
 	<padding>
-		<Insets bottom = "15.0" left = "15.0" right = "15.0" top = "15.0"/>
+		<Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
 	</padding>
 	<opaqueInsets>
-		<Insets bottom = "15.0" left = "15.0" right = "15.0" top = "15.0"/>
+		<Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
 	</opaqueInsets>
-	<Label text = "First walk file:" GridPane.columnIndex = "1"/>
-	<Label text = "Second walk file:" GridPane.columnIndex = "1" GridPane.rowIndex = "1"/>
-	<TextField fx:id = "firstFile" text = "walk1.txt" GridPane.columnIndex = "2"/>
-	<TextField fx:id = "secondFile" text = "walk2.txt" GridPane.columnIndex = "2" GridPane.rowIndex = "1"/>
-	<Button fx:id = "openWalk1Button" mnemonicParsing = "false" text = "..." GridPane.columnIndex = "3"
-	        GridPane.rowIndex = "0"/>
-	<Button fx:id = "openWalk2Button" mnemonicParsing = "false" text = "..." GridPane.columnIndex = "3"
-	        GridPane.rowIndex = "1"/>
-	<Button fx:id = "showInterfacesButton" mnemonicParsing = "false" prefHeight = "31.0" prefWidth = "284.0"
-	        text = "Show Interfaces" GridPane.columnIndex = "1" GridPane.rowIndex = "2"/>
-	<TableView fx:id = "interfaceTableView" maxWidth = "600.0" prefHeight = "200.0" prefWidth = "600.0"
-	           GridPane.columnIndex = "1" GridPane.columnSpan = "3" GridPane.rowIndex = "3">
+	<Label text="First walk file:" GridPane.columnIndex="1" />
+	<Label text="Second walk file:" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+	<TextField fx:id="firstFile" text="walk1.txt" GridPane.columnIndex="2" />
+	<TextField fx:id="secondFile" text="walk2.txt" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+	<Button fx:id="openWalk1Button" mnemonicParsing="false" text="..." GridPane.columnIndex="3"
+	        GridPane.rowIndex="0" />
+	<Button fx:id="openWalk2Button" mnemonicParsing="false" text="..." GridPane.columnIndex="3"
+	        GridPane.rowIndex="1" />
+	<Button fx:id="showInterfacesButton" mnemonicParsing="false" prefHeight="31.0" prefWidth="284.0"
+	        text="Show Interfaces" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+	<TableView fx:id="interfaceTableView" maxWidth="600.0" prefHeight="200.0" prefWidth="600.0"
+	           GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3">
 		<columns>
-			<TableColumn fx:id = "ifIndexCol" maxWidth = "-Infinity" minWidth = "75.0" prefWidth = "300.0"
-			             text = "Index"/>
-			<TableColumn fx:id = "ifDescCol" maxWidth = "-1.0" minWidth = "300.0" prefWidth = "-1.0"
-			             text = "Description"/>
+			<TableColumn fx:id="ifIndexCol" maxWidth="-Infinity" minWidth="75.0" prefWidth="300.0"
+			             text="Index" />
+			<TableColumn fx:id="ifDescCol" maxWidth="-1.0" minWidth="300.0" prefWidth="-1.0"
+			             text="Description" />
 		</columns>
 		<GridPane.margin>
-			<Insets/>
+			<Insets />
 		</GridPane.margin>
 	</TableView>
-	<Label fx:id = "fileLabel" GridPane.columnIndex = "2" GridPane.columnSpan = "2" GridPane.rowIndex = "2"/>
-	<TableView fx:id = "statisticTableView" prefHeight = "200.0" prefWidth = "266.0" GridPane.columnIndex = "1"
-	           GridPane.columnSpan = "3" GridPane.rowIndex = "5">
+	<Label fx:id="fileLabel" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="2" />
+	<TableView fx:id="statisticTableView" prefHeight="200.0" prefWidth="266.0" GridPane.columnIndex="1"
+	           GridPane.columnSpan="3" GridPane.rowIndex="5">
 		<columns>
-			<TableColumn fx:id = "statDescrCol" maxWidth = "500.0" minWidth = "160.0" prefWidth = "160.0"
-			             text = "Description"/>
-			<TableColumn fx:id = "statValueCol" maxWidth = "500.0" minWidth = "200.0" prefWidth = "200.0"
-			             text = "Value"/>
+			<TableColumn fx:id="statDescrCol" maxWidth="500.0" minWidth="160.0" prefWidth="160.0"
+			             text="Description" />
+			<TableColumn fx:id="statValueCol" maxWidth="500.0" minWidth="200.0" prefWidth="200.0"
+			             text="Value" />
 		</columns>
 	</TableView>
-	<Button fx:id = "saveButton" mnemonicParsing = "false" text = "Save" GridPane.columnIndex = "1"
-	        GridPane.rowIndex = "6"/>
-	<Label fx:id = "promptLabel" text = "Press the 'Show Interfaces' button above." GridPane.columnIndex = "1"
-	       GridPane.columnSpan = "2" GridPane.rowIndex = "4"/>
-	<Button fx:id = "exitButton" mnemonicParsing = "false" text = "Exit" GridPane.columnIndex = "2"
-	        GridPane.columnSpan = "2" GridPane.halignment = "RIGHT" GridPane.rowIndex = "6"/>
+	<Button fx:id="saveButton" mnemonicParsing="false" text="Save" GridPane.columnIndex="1"
+	        GridPane.rowIndex="6" />
+	<Label fx:id="promptLabel" text="Press the 'Show Interfaces' button above." GridPane.columnIndex="1"
+	       GridPane.columnSpan="2" GridPane.rowIndex="4" />
+	<Button fx:id="exitButton" mnemonicParsing="false" text="Exit" GridPane.columnIndex="2"
+	        GridPane.columnSpan="2" GridPane.halignment="RIGHT" GridPane.rowIndex="6" />
 </GridPane>

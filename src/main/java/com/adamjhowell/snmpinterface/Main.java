@@ -71,16 +71,13 @@ public class Main extends Application
 	public void start( Stage primaryStage ) throws Exception
 	{
 		// Load the FXML file containing all of the UI elements.
-		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation( getClass().getResource( "view/RootLayout.fxml" ) );
-//		Parent root = loader.getRoot();    // This ends up being null, which crashes on setScene().
-		Parent root = FXMLLoader.load( getClass().getClassLoader().getResource( "view/RootLayout.fxml" ) );
+		Parent rootNode = new FXMLLoader( getClass().getResource( "../../../view/RootLayout.fxml" ) ).load();
 
 		// Create the stage and set the window title.
 		primaryStage.setTitle( "SNMP Link Utilization" );
 
 		// Set the scene using root, with the specified width and height.
-		primaryStage.setScene( new Scene( root, 500, 600 ) );
+		primaryStage.setScene( new Scene( rootNode, 500, 600 ) );
 
 		// Set the icon for a non-Maven build.
 		//primaryStage.getIcons().add( new Image( "file:resources/images/nic.png" ) );

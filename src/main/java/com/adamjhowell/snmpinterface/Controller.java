@@ -32,10 +32,10 @@ import java.util.stream.Collectors;
 public class Controller
 {
 	// This section can be modified to suit SNMP walks that use names instead of numbers.
-//	private final static String SYS_DESCR = ".1.3.6.1.2.1.1.1.0";
+	//private final static String SYS_DESCR = ".1.3.6.1.2.1.1.1.0";
 	private final static String SYS_UPTIME_OID = ".1.3.6.1.2.1.1.3.0";
-	//	private final static String SYS_NAME = ".1.3.6.1.2.1.1.5.0";
-//	private final static String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";
+	//private final static String SYS_NAME = ".1.3.6.1.2.1.1.5.0";
+	//private final static String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";
 	private final static String IF_DESCRIPTION_OID = ".1.3.6.1.2.1.2.2.1.2.";
 	private final static String IF_SPEED_OID = ".1.3.6.1.2.1.2.2.1.5.";
 	private final static String IF_IN_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.10.";
@@ -513,6 +513,9 @@ public class Controller
 	} // End of saveButtonHandler() method.
 
 
+	/**
+	 * This method sets up the Show Interfaces button
+	 */
 	@FXML private void showInterfaceButtonHandler()
 	{
 		// Set the button to disabled (again), until an interface is clicked.
@@ -638,7 +641,9 @@ public class Controller
 	} // End of invalidButtonAlert() method.
 
 
-	// This method is called by the FXMLLoader when initialization is complete
+	/**
+	 * This method is called by the FXMLLoader when initialization is complete
+	 */
 	@FXML void initialize()
 	{
 		assert rootNode != null : "fx:id=\"rootNode\" was not injected: check your FXML file 'RootLayout.fxml'.";
