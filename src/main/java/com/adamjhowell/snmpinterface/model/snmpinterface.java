@@ -3,7 +3,7 @@ package com.adamjhowell.snmpinterface.model;
 
 /**
  * Created by Adam Howell on 2016-05-05.
- * This class is meant to represent all of the stats pertinent to a SNMP interface or link.
+ * This class is a structure meant to represent all of the stats pertinent to a SNMP interface or link.
  * A SNMP interface is essentially a NIC (Network Interface Card) or network adapter.
  * It may be a wired ethernet port, an 802.11 radio, a bluetooth adapter, a USB network device, or similar hardware.
  * It may also be a virtual (software) network adapter.

@@ -13,10 +13,10 @@ import javafx.stage.Stage;
  * This program will open two SNMP walk files, locate and display each interface, and allow the user to select a displayed interface.
  * When an interface is selected, the program will calculate the utilization of that interface from the values in each walk.
  * <p>
- * You will need SLF4J and JSON-Simple libraries in your classpath to build this project.  I used slf4j-api-1.7.21 and slf4j-jdk14-1.7.21
- * You will also need JSON Simple in your classpath.
+ * You will need the JSON-Simple library in your classpath to build this project.
  * <p>
- * The OIDs in the input files are expected to be in numerical format.
+ * The OIDs in the input files are expected to be in numerical (dot notation) format.
+ * However, it would not take much work to convert to ASN.1 or OID-IRI notation.
  * If named identifiers are desired, please contact me, and we can discuss formatting.
  * This means each line will begin with a dotted-decimal identifier.  Some of those identifiers are listed below.
  * The lines will not contain tabs between tokens, but spaces.  Tabs have not been tested, but may work.
@@ -28,7 +28,7 @@ import javafx.stage.Stage;
  * More information can be found here:
  * http://www.cisco.com/c/en/us/support/docs/ip/simple-network-management-protocol-snmp/8141-calculate-bandwidth-snmp.html
  * <p>
- * Here are the pertinent OIDs for this program (some, like errors and discards, are not implemented yet):
+ * Here are the pertinent OIDs for this program:
  * SYSUPTIMEOID = ".1.3.6.1.2.1.1.3.0";			// The OID for sysUpTime (System UpTime)
  * IFINDEXOID = ".1.3.6.1.2.1.2.2.1.1.";	    	// The OID for ifIndex (Interface Index)
  * IFDESCROID = ".1.3.6.1.2.1.2.2.1.2.";	   	// The OID for ifDescr (Interface Description)
@@ -42,7 +42,7 @@ import javafx.stage.Stage;
  * COUNTER32MAX = 4294967295;					// The maximum value a Counter32 can hold.
  * COUNTER64MAX = 18446744073709551615;	     	// The maximum value a Counter64 can hold.
  * <p>
- * I will commonly use 'if' in my variable names to indicate the symbol refers to a SNMP Interface.
+ * Many of my variable names will begin with 'if'.  In the SNMP world, 'if' typically represents an interface (NIC).
  * SNMP OIDs research links:
  * https://snmp.cloudapps.cisco.com/Support/SNMP/do/BrowseOID.do
  * http://www.oid-info.com/
@@ -79,8 +79,7 @@ public class Main extends Application
 		// Set the scene using root, with the specified width and height.
 		primaryStage.setScene( new Scene( rootNode, 500, 600 ) );
 
-		// Set the icon for a non-Maven build.
-		//primaryStage.getIcons().add( new Image( "file:resources/images/nic.png" ) );
+		// Set the icon for a non-Maven build: "file:resources/images/nic.png"
 		// Set the icon for a Maven build.
 		primaryStage.getIcons().add( new Image( "images/nic.png" ) );
 

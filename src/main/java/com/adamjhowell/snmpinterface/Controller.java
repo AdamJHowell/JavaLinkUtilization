@@ -13,8 +13,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -22,6 +20,8 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
@@ -33,22 +33,22 @@ public class Controller
 {
 	// This section can be modified to suit SNMP walks that use names instead of numbers.
 	//private final static String SYS_DESCR = ".1.3.6.1.2.1.1.1.0";
-	private final static String SYS_UPTIME_OID = ".1.3.6.1.2.1.1.3.0";
+	private static final String SYS_UPTIME_OID = ".1.3.6.1.2.1.1.3.0";
 	//private final static String SYS_NAME = ".1.3.6.1.2.1.1.5.0";
 	//private final static String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";
-	private final static String IF_DESCRIPTION_OID = ".1.3.6.1.2.1.2.2.1.2.";
-	private final static String IF_SPEED_OID = ".1.3.6.1.2.1.2.2.1.5.";
-	private final static String IF_IN_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.10.";
-	private final static String IF_IN_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.13.";
-	private final static String IF_IN_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.14.";
-	private final static String IF_OUT_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.16.";
-	private final static String IF_OUT_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.19.";
-	private final static String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";
-	private final static long COUNTER32MAX = 4294967295L;
-	private final static boolean DEBUG = false;
+	private static final String IF_DESCRIPTION_OID = ".1.3.6.1.2.1.2.2.1.2.";
+	private static final String IF_SPEED_OID = ".1.3.6.1.2.1.2.2.1.5.";
+	private static final String IF_IN_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.10.";
+	private static final String IF_IN_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.13.";
+	private static final String IF_IN_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.14.";
+	private static final String IF_OUT_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.16.";
+	private static final String IF_OUT_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.19.";
+	private static final String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";
+	private static final long COUNTER32MAX = 4294967295L;
+	private static final boolean DEBUG = false;
 
 	// Logging
-	private static final Logger errorLogger = LoggerFactory.getLogger( Main.class );
+	private static final Logger errorLogger = Logger.getLogger( Main.class.getName() );
 	// Sample data for the interface table.
 	private final ObservableList< SnmpInterface > interfaceObservableData = FXCollections.observableArrayList(
 		new SnmpInterface( 42L, "Sample data." ),
@@ -85,37 +85,58 @@ public class Controller
 	 */
 	private static List< String > readFile( String inFileName )
 	{
-		String line;
-		List< String > inAL = new ArrayList<>();
-		try
+		// commentString can be changed to whatever you wish to use as a comment indicator.  When this String is encountered, the rest of the line will be ignored.
+		String commentString = "//";
+		List< String > inAl = new ArrayList<>();
+
+		// Attempt to open the file using "try with resources", to ensure it will close automatically.
+		try( BufferedReader inBR = new BufferedReader( new FileReader( inFileName ) ) )
 		{
-			// Create a file handle with the provided filename.
-			File inFileHandle = new File( inFileName );
-			// Check that the file opened.
-			if( inFileHandle.exists() )
+			String line;
+			int inputLineCount = 0;
+
+			// Read lines until EOF.
+			while( ( line = inBR.readLine() ) != null )
 			{
-				// Create a BufferedReader from that file handle.
-				BufferedReader inBR = new BufferedReader( new FileReader( inFileHandle ) );
-				// Read in each line from the file.
-				while( ( line = inBR.readLine() ) != null )
+				inputLineCount++;
+				// Check for comments.
+				if( line.contains( commentString ) )
 				{
-					// Populate the ArrayList with each line we read in.
-					inAL.add( line );
+					// Grab all of the text up to the comment.
+					String subString = line.substring( 0, line.indexOf( commentString ) );
+
+					// Only add lines with content.
+					if( subString.length() > 0 )
+					{
+						// Add the line to our ArrayList.
+						inAl.add( subString );
+					}
+					else
+					{
+						errorLogger.log( Level.FINEST, "readFile() is skipping a line that has only comments at row  {0}", inputLineCount );
+					}
 				}
-				return inAL;
-			}
-			else
-			{
-				errorLogger.error( "File error: input file " + inFileName + " does not exist!" );
+				else
+				{
+					// Ignore empty lines and lines that contain only whitespace.
+					if( line.length() > 0 && !line.matches( "\\s+" ) )
+					{
+						// Add the line to our ArrayList.
+						inAl.add( line.trim() );
+					}
+					else
+					{
+						errorLogger.log( Level.FINEST, "readFile is skipping a zero length line at row {0}", inputLineCount );
+					}
+				}
 			}
 		}
 		catch( IOException ioe )
 		{
-			errorLogger.error( "Exception: IOError trying to read the input file: " + inFileName );
-			ioe.getLocalizedMessage();
+			ioe.getMessage();
 		}
-		return null;
-	} // End of readFile() method.
+		return inAl;
+	} // End of ReadFile() method.
 
 
 	/**
@@ -156,9 +177,8 @@ public class Controller
 				}
 				catch( NumberFormatException nfe )
 				{
-					errorLogger.error( "Exception: NumberFormatException trying parseLong()!" );
+					errorLogger.log( Level.SEVERE, "Exception: NumberFormatException trying parseLong()!" );
 					nfe.getMessage();
-					nfe.printStackTrace();
 				}
 			} );
 
@@ -167,7 +187,7 @@ public class Controller
 		}
 		else
 		{
-			errorLogger.error( "The SNMP walks appear to be from different machines.  This will prevent any calculations." );
+			errorLogger.log( Level.SEVERE, "The SNMP walks appear to be from different machines.  This will prevent any calculations." );
 			return null;
 		}
 	} // End of findInterfaces() method.
@@ -176,8 +196,7 @@ public class Controller
 	/**
 	 * calculateStatistics
 	 * Created by Adam Howell on 2016-05-10.
-	 * This will analyze two data containers and produce human-readable output related to
-	 * the differences between those containers.
+	 * This will analyze two data containers and produce human-readable output related to the differences between those containers.
 	 *
 	 * @param walk1 the output from buildCompleteSNMPInterface for the first WALK.
 	 * @param walk2 the output from buildCompleteSNMPInterface for the second WALK.
@@ -187,34 +206,30 @@ public class Controller
 	{
 		// The generic formula for inUtilization is: ( delta-octets * 8 * 10 ) / ( delta-seconds * ifSpeed )
 		ObservableList< InterfaceStats > statsAL = FXCollections.observableArrayList();
-		NumberFormat nf_us = NumberFormat.getInstance( Locale.US );
+		NumberFormat nfUs = NumberFormat.getInstance( Locale.US );
 
 		// Get the time delta.  The timestamps MUST be different for utilization to be meaningful.
 		if( walk1.getSysUpTime() < walk2.getSysUpTime() )
 		{
 			// Get the number of ticks between the two walks.  There are 100 ticks per second.
-			statsAL.add( new InterfaceStats( "Time Delta",
-				nf_us.format( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) ) +
-					" seconds" ) );
+			statsAL.add( new InterfaceStats( "Time Delta", nfUs.format( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) ) + " seconds" ) );
 		}
 		else
 		{
 			// We should not be able to reach this point, as checking is done in start() to avoid this situation.
-			errorLogger.error( "Invalid data, SysUpTime values match, but should not!" );
+			errorLogger.log( Level.SEVERE, "Invalid data, SysUpTime values match, but should not!" );
 			statsAL.add( new InterfaceStats( "Invalid data:", "SysUpTime values match" ) );
-			//return CalculatedStats;
 			return null;
 		}
 
-		// Get the ifSpeed for each WALK.  These MUST match.
+		// Get the ifSpeed for each WALK.  These MUST match for any comparison to be meaningful.
 		if( walk1.getIfSpeed().equals( walk2.getIfSpeed() ) )
 		{
-			//statsAL.add( new InterfaceStats( "Interface Speed", walk1.getIfSpeed().toString() ) );
-			statsAL.add( new InterfaceStats( "Interface Speed", nf_us.format( walk1.getIfSpeed() ) ) );
+			statsAL.add( new InterfaceStats( "Interface Speed", nfUs.format( walk1.getIfSpeed() ) ) );
 		}
 		else
 		{
-			errorLogger.error( "Invalid data, interface speeds do not match!" );
+			errorLogger.log( Level.SEVERE, "Invalid data, interface speeds do not match!" );
 			statsAL.add( new InterfaceStats( "Interface Speeds", "Do Not Match" ) );
 			return statsAL;
 		}
@@ -226,7 +241,7 @@ public class Controller
 		{
 			inOctetDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Inbound Octet Delta", nf_us.format( inOctetDelta ) ) );
+		statsAL.add( new InterfaceStats( "Inbound Octet Delta", nfUs.format( inOctetDelta ) ) );
 
 		// Get the outOctet delta.
 		Long outOctetDelta = walk2.getIfOutOctets() - walk1.getIfOutOctets();
@@ -235,9 +250,9 @@ public class Controller
 		{
 			outOctetDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Outbound Octet Delta", nf_us.format( outOctetDelta ) ) );
+		statsAL.add( new InterfaceStats( "Outbound Octet Delta", nfUs.format( outOctetDelta ) ) );
 		Long totalOctetDelta = inOctetDelta + outOctetDelta;
-		statsAL.add( new InterfaceStats( "Total Delta", ( nf_us.format( totalOctetDelta ) ) ) );
+		statsAL.add( new InterfaceStats( "Total Delta", ( nfUs.format( totalOctetDelta ) ) ) );
 
 		// Calculate inUtilization and outUtilization.  Avoid divide-by-zero errors.
 		if( ( walk2.getSysUpTime() - walk1.getSysUpTime() ) != 0 && walk1.getIfSpeed() != 0 )
@@ -246,33 +261,33 @@ public class Controller
 			Double inUtilization = ( double ) ( inOctetDelta * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Format the double to 3 decimal places.
 			Double inTruncatedDouble = new BigDecimal( inUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
-			statsAL.add( new InterfaceStats( "Inbound Utilization", nf_us.format( inTruncatedDouble ) ) );
+			statsAL.add( new InterfaceStats( "Inbound Utilization", nfUs.format( inTruncatedDouble ) ) );
 
 			// Calculate the outUtilization.
 			Double outUtilization = ( double ) ( outOctetDelta * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Format the double to 3 decimal places.
 			Double outTruncatedDouble = new BigDecimal( outUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
-			statsAL.add( new InterfaceStats( "Outbound Utilization", nf_us.format( outTruncatedDouble ) ) );
+			statsAL.add( new InterfaceStats( "Outbound Utilization", nfUs.format( outTruncatedDouble ) ) );
 
 			// Calculate the totalUtilization.
 			Double totalUtilization = ( ( ( totalOctetDelta ) * 8 * 100 ) / ( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() ) / 2 );
 			// Format the double to 3 decimal places.
 			Double totalTruncatedDouble = new BigDecimal( totalUtilization ).setScale( 3, BigDecimal.ROUND_HALF_UP ).doubleValue();
-			statsAL.add( new InterfaceStats( "Total Utilization", nf_us.format( totalTruncatedDouble ) ) );
+			statsAL.add( new InterfaceStats( "Total Utilization", nfUs.format( totalTruncatedDouble ) ) );
 		}
 		else
 		{
 			if( ( ( double ) ( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) == 0 )
 			{
 				// This should never be reached because I check for invalid time stamps above.
-				errorLogger.error( "Invalid data, no time has passed between walks!" );
+				errorLogger.log( Level.SEVERE, "Invalid data, no time has passed between walks!" );
 				statsAL.add( new InterfaceStats( "Unable to calculate utilization", "no time has passed between walks" ) );
 			}
 			if( walk1.getIfSpeed() == 0 )
 			{
 				// This can only be reached if the interface speed is set to zero.
-				errorLogger.warn( "Invalid data, interface speed is zero!" );
-				statsAL.add( new InterfaceStats( "Unable to calculate utilization", "interface speed is zero" ) );
+				errorLogger.log( Level.WARNING, "Invalid data, interface speed is zero!" );
+				statsAL.add( new InterfaceStats( "errorLogger.log( Level.SEVERE, ", "interface speed is zero" ) );
 			}
 		}
 
@@ -283,7 +298,7 @@ public class Controller
 		{
 			inDiscardDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Inbound Discards", nf_us.format( inDiscardDelta ) ) );
+		statsAL.add( new InterfaceStats( "Inbound Discards", nfUs.format( inDiscardDelta ) ) );
 
 		// Calculate outbound discard delta.
 		Long outDiscardDelta = walk2.getIfOutDiscards() - walk1.getIfOutDiscards();
@@ -292,11 +307,11 @@ public class Controller
 		{
 			outDiscardDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Outbound Discards", nf_us.format( outDiscardDelta ) ) );
+		statsAL.add( new InterfaceStats( "Outbound Discards", nfUs.format( outDiscardDelta ) ) );
 
 		// Calculate total discard delta.
 		Long totalDiscardDelta = inDiscardDelta + outDiscardDelta;
-		statsAL.add( new InterfaceStats( "Total Discards", nf_us.format( totalDiscardDelta ) ) );
+		statsAL.add( new InterfaceStats( "Total Discards", nfUs.format( totalDiscardDelta ) ) );
 
 		// Calculate inbound error delta.
 		Long inErrorDelta = walk2.getIfInErrors() - walk1.getIfInErrors();
@@ -305,7 +320,7 @@ public class Controller
 		{
 			inErrorDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Inbound Errors", nf_us.format( inErrorDelta ) ) );
+		statsAL.add( new InterfaceStats( "Inbound Errors", nfUs.format( inErrorDelta ) ) );
 
 		// Calculate outbound error delta.
 		Long outErrorDelta = walk2.getIfOutErrors() - walk1.getIfOutErrors();
@@ -314,11 +329,11 @@ public class Controller
 		{
 			outErrorDelta += COUNTER32MAX;
 		}
-		statsAL.add( new InterfaceStats( "Outbound Errors", nf_us.format( outErrorDelta ) ) );
+		statsAL.add( new InterfaceStats( "Outbound Errors", nfUs.format( outErrorDelta ) ) );
 
 		// Calculate total error delta.
 		Long totalErrorDelta = inErrorDelta + outErrorDelta;
-		statsAL.add( new InterfaceStats( "Total Errors", nf_us.format( totalErrorDelta ) ) );
+		statsAL.add( new InterfaceStats( "Total Errors", nfUs.format( totalErrorDelta ) ) );
 
 		return statsAL;
 	} // End of calculateStatistics() method.
@@ -334,6 +349,7 @@ public class Controller
 	 * @param ifIndex the SNMP Interface Index to build.
 	 * @return a SnmpInterface class object that represents the details for the requested interface.
 	 */
+	@java.lang.SuppressWarnings( "squid:S106" )
 	private static SnmpInterface buildCompleteSNMPInterface( List< String > walk, Long ifIndex )
 	{
 		long tempSysUpTime = 0;
@@ -471,9 +487,9 @@ public class Controller
 	 * saveButtonHandler
 	 * This method will create a handler for the save file button.
 	 *
-	 * @param CalculatedUtilization the object that we want to save.
+	 * @param calculatedUtilization the object that we want to save.
 	 */
-	@FXML private void saveButtonHandler( ObservableList< InterfaceStats > CalculatedUtilization )
+	@FXML private void saveButtonHandler( ObservableList< InterfaceStats > calculatedUtilization )
 	{
 		Stage primaryStage = ( Stage ) rootNode.getScene().getWindow();
 
@@ -493,28 +509,26 @@ public class Controller
 		}
 		else
 		{
-			try
+			try( FileWriter file = new FileWriter( selectedFile ) )
 			{
 				// Try to create a file using the name selected in FileChooser.
-				FileWriter file = new FileWriter( selectedFile );
 
-				// Convert CalculatedUtilization to JSON and write it to file.
-				file.write( new Gson().toJson( CalculatedUtilization ) );
+				// Convert calculatedUtilization to JSON and write it to file.
+				file.write( new Gson().toJson( calculatedUtilization ) );
 
 				file.flush();
-				file.close();
 			}
 			catch( IOException ioe )
 			{
-				errorLogger.error( "Exception: Unable to save output file!" );
-				ioe.printStackTrace();
+				errorLogger.log( Level.SEVERE, "Exception: Unable to save output file!" );
+				errorLogger.log( Level.SEVERE, ioe.getLocalizedMessage() );
 			}
 		}
 	} // End of saveButtonHandler() method.
 
 
 	/**
-	 * This method sets up the Show Interfaces button
+	 * This method sets up the Show Interfaces button.
 	 */
 	@FXML private void showInterfaceButtonHandler()
 	{
@@ -533,16 +547,16 @@ public class Controller
 		if( inAL1 != null && inAL2 != null )
 		{
 			// Create an ObservableList of SnmpInterface objects from those files.
-			ObservableList< SnmpInterface > ObservableIfContainer = findInterfaces( inAL1, inAL2 );
+			ObservableList< SnmpInterface > observableIfContainer = findInterfaces( inAL1, inAL2 );
 
 			// Check that findInterfaces did not return a null.
-			if( ObservableIfContainer != null )
+			if( observableIfContainer != null )
 			{
 				// Clear the file warning label.
 				fileLabel.setText( "" );
 
 				// Populate our ListView with content from the interfaces.
-				interfaceTableView.setItems( ObservableIfContainer );
+				interfaceTableView.setItems( observableIfContainer );
 				// Add a mouse-click event for each row in the table.
 				interfaceTableView.setOnMousePressed( event ->
 				{
@@ -554,34 +568,34 @@ public class Controller
 						SnmpInterface interface2 = buildCompleteSNMPInterface( inAL2, interfaceTableView.getSelectionModel().getSelectedItem().getIfIndex() );
 
 						// Populate our ListView with the return.
-						ObservableList< InterfaceStats > CalculatedUtilization = FXCollections.observableArrayList();
+						ObservableList< InterfaceStats > calculatedUtilization = FXCollections.observableArrayList();
 						if( interface1.getSysUpTime() < interface2.getSysUpTime() )
 						{
-							CalculatedUtilization = calculateStatistics( interface1, interface2 );
+							calculatedUtilization = calculateStatistics( interface1, interface2 );
 						}
 						else if( interface1.getSysUpTime() > interface2.getSysUpTime() )
 						{
-							CalculatedUtilization = calculateStatistics( interface2, interface1 );
+							calculatedUtilization = calculateStatistics( interface2, interface1 );
 						}
 						else
 						{
-							errorLogger.error( "Invalid data, time stamps on the two WALK files are identical!" );
+							errorLogger.log( Level.SEVERE, "Invalid data, time stamps on the two WALK files are identical!" );
 							if( DEBUG )
 							{
-								errorLogger.error( "This happened in the statisticTableView event handler." );
+								errorLogger.log( Level.SEVERE, "This happened in the statisticTableView event handler." );
 							}
-							CalculatedUtilization.addAll( new InterfaceStats( "Unable to calculate utilization", "The time stamps on the two files are identical" ) );
+							calculatedUtilization.addAll( new InterfaceStats( "Unable to calculate utilization", "The time stamps on the two files are identical" ) );
 						}
 						// Assign each column to a class data member.
 						statDescrCol.setCellValueFactory( new PropertyValueFactory<>( "description" ) );
 						statValueCol.setCellValueFactory( new PropertyValueFactory<>( "value" ) );
 
 						// Populate the TableView with our results.
-						statisticTableView.setItems( CalculatedUtilization );
+						statisticTableView.setItems( calculatedUtilization );
 
 						// Enable the save button.
 						saveButton.setDisable( false );
-						final ObservableList< InterfaceStats > finalCalculatedUtilization = CalculatedUtilization;
+						final ObservableList< InterfaceStats > finalCalculatedUtilization = calculatedUtilization;
 						// Save the stats to a file.
 						saveButton.setOnAction( clickEvent -> saveButtonHandler( finalCalculatedUtilization ) );
 					}
@@ -590,7 +604,7 @@ public class Controller
 			else
 			{
 				// Warn the user that the files are not usable, and clear the TableView.
-				errorLogger.error( "Invalid data, input files are not compatible with each other!" );
+				errorLogger.log( Level.SEVERE, "Invalid data, input files are not compatible with each other!" );
 				fileLabel.setText( "Walk files are not compatible!" );
 				interfaceTableView.setItems( null );
 			}
@@ -602,23 +616,18 @@ public class Controller
 			{
 				fileName = firstFile.getText();
 			}
-//			else if( inAL2 == null )
-//			{
-//				fileName = secondFile.getText();
-//			}
 			else
 			{
 				fileName = "<unknown>";
 			}
-			errorLogger.error( "The first WALK file " + fileName + " could not be opened." );
+			errorLogger.log( Level.SEVERE, "The first WALK file {0} could not be opened.", fileName );
+			errorLogger.log( Level.SEVERE, "Invalid file, does not exist!" );
 
-			errorLogger.error( "Invalid file, does not exist!" );
 			// Create a pop-up alert to signal that a file name was invalid.
 			Alert alert = new Alert( Alert.AlertType.ERROR );
 			alert.setTitle( "File Error" );
 			alert.setHeaderText( "Unable to open " + firstFile.getText() );
 			alert.setContentText( "File does not exist." );
-
 			alert.showAndWait();
 		}
 	} // End of showInterfaceButtonHandler() method.
@@ -630,7 +639,7 @@ public class Controller
 	 */
 	@FXML private void invalidButtonAlert()
 	{
-		errorLogger.error( "The save button was clicked before it was ready." );
+		errorLogger.log( Level.SEVERE, "The save button was clicked before it was ready." );
 		// Create a pop-up alert to signal that this button is not available yet.
 		Alert alert = new Alert( Alert.AlertType.ERROR );
 		alert.setTitle( "Invalid Button" );
@@ -642,7 +651,7 @@ public class Controller
 
 
 	/**
-	 * This method is called by the FXMLLoader when initialization is complete
+	 * This method is called by the FXMLLoader when initialization is complete.
 	 */
 	@FXML void initialize()
 	{
