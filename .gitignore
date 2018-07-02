@@ -1,10 +1,7 @@
-*.class
-
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.ear
 
@@ -19,4 +16,4 @@ target/
 # Files that I do not want included
 *.epp
 *.iml
-src/com/
+ajhtest.json

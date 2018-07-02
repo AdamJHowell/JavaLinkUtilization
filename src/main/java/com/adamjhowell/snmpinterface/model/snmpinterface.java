@@ -41,6 +41,7 @@ public class SnmpInterface
 	 * @param ifOutDiscards the interface outbound discard count from the SNMP walk.
 	 * @param ifOutErrors   the interface outbound error count from the SNMP walk.
 	 */
+	@SuppressWarnings( "squid:S00107" )
 	public SnmpInterface( Long ifIndex, String ifDescr, Long sysUpTime, Long ifSpeed, Long ifInOctets, Long ifInDiscards, Long ifInErrors, Long ifOutOctets, Long ifOutDiscards, Long ifOutErrors )
 	{
 		this.ifIndex = ifIndex;
