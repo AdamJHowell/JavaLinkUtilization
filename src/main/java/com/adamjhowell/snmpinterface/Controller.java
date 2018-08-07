@@ -25,31 +25,89 @@ import java.util.stream.Collectors;
 
 
 /**
+ * This will do all of the computational work and event handling.<br>
+ * The class variables can be converted from numerical (dot format) to names.
+ * The class variables can be modified to suit SNMP walks that use names instead of numbers.
+ * Gson will need to be added to the project classpath.
+ * <p>
  * Created by Adam Howell on 2016-06-08.
- * This will do all of the computational work and event handling.
- * Add the Gson import to the classpath.
  */
 public class Controller
 {
-	// This section can be modified to suit SNMP walks that use names instead of numbers.
-	//private final static String SYS_DESCR = ".1.3.6.1.2.1.1.1.0";
+	/**
+	 * A textual description of the entity.
+	 * This value should include the full name and version identification of the system's hardware type, software operating-system, and networking software.
+	 * It is mandatory that this only contain printable ASCII characters.
+	 */
+	private static final String SYS_DESCR = ".1.3.6.1.2.1.1.1.0";
+	/**
+	 * The time (in hundredths of a second) since the network management portion of the system was last re-initialized.
+	 * For many manufacturers, this will be reset when the network stack is restarted.
+	 */
 	private static final String SYS_UPTIME_OID = ".1.3.6.1.2.1.1.3.0";
-	//private final static String SYS_NAME = ".1.3.6.1.2.1.1.5.0";
-	//private final static String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";
+	/**
+	 * An administratively-assigned name for this managed node.  By convention, this is the node's fully-qualified domain name.
+	 */
+	private static final String SYS_NAME = ".1.3.6.1.2.1.1.5.0";
+	/**
+	 * A unique value for each interface.
+	 * The value for each interface must remain constant at least from one re-initialization of the entity's network management system to the next re-initialization.
+	 */
+	private static final String IF_INDEX_OID = ".1.3.6.1.2.1.2.2.1.1.";
+	/**
+	 * A textual string containing information about the interface.
+	 * This string should include the name of the manufacturer, the product name and the version of the hardware interface.
+	 */
 	private static final String IF_DESCRIPTION_OID = ".1.3.6.1.2.1.2.2.1.2.";
+	/**
+	 * The nominal bandwidth of the interface.
+	 * If this is set to zero or less, the utilization cannot be calculated.
+	 */
 	private static final String IF_SPEED_OID = ".1.3.6.1.2.1.2.2.1.5.";
+	/**
+	 * The total number of octets received on the interface, including framing characters.
+	 * This will wrap at either a 32-bit or 64-bit value.
+	 */
 	private static final String IF_IN_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.10.";
+	/**
+	 * The number of inbound packets which were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol.
+	 * One possible reason for discarding such a packet could be to free up buffer space.
+	 * This will wrap at either a 32-bit or 64-bit value.
+	 */
 	private static final String IF_IN_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.13.";
+	/**
+	 * The number of inbound packets that contained errors preventing them from being deliverable to a higher-layer protocol.
+	 * This will wrap at either a 32-bit or 64-bit value.
+	 */
 	private static final String IF_IN_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.14.";
+	/**
+	 * The total number of octets transmitted out of the interface, including framing characters.
+	 * This will wrap at either a 32-bit or 64-bit value.
+	 */
 	private static final String IF_OUT_OCTETS_OID = ".1.3.6.1.2.1.2.2.1.16.";
+	/**
+	 * The number of outbound packets which were chosen to be discarded even though no errors had been detected to prevent their being transmitted.
+	 * One possible reason for discarding such a packet could be to free up buffer space.
+	 * This will wrap at either a 32-bit or 64-bit value.
+	 */
 	private static final String IF_OUT_DISCARDS_OID = ".1.3.6.1.2.1.2.2.1.19.";
+	/**
+	 * The number of outbound packets that could not be transmitted because of errors.
+	 * This will wrap at either a 32-bit or 64-bit value.
+	 */
 	private static final String IF_OUT_ERRORS_OID = ".1.3.6.1.2.1.2.2.1.20.";
+	/**
+	 * This sets the value to wrap the counters at.
+	 */
 	private static final long COUNTER32MAX = 4294967295L;
-	private static final boolean DEBUG = false;
 
-	// Logging
+	/**
+	 * The logging system used.
+	 */
 	private static final Logger errorLogger = Logger.getLogger( Main.class.getName() );
-	// Sample data for the interface table.
+	/**
+	 * Sample data for the interface table.
+	 */
 	private final ObservableList<SnmpInterface> interfaceObservableData = FXCollections.observableArrayList(
 		new SnmpInterface( 42L, "Sample data." ),
 		new SnmpInterface( 42L, "Press the..." ),
@@ -60,28 +118,27 @@ public class Controller
 	@FXML private Button openWalk1Button;
 	@FXML private Button openWalk2Button;
 	@FXML private Button showInterfacesButton;
+	@FXML private Button saveButton;
+	@FXML private Button exitButton;
+	@FXML private Label fileLabel;
+	@FXML private Label promptLabel;
 	@FXML private TableView<SnmpInterface> interfaceTableView;
 	@FXML private TableColumn<SnmpInterface, String> ifIndexCol;
 	@FXML private TableColumn<SnmpInterface, String> ifDescCol;
 	@FXML private TableView<InterfaceStats> statisticTableView;
 	@FXML private TableColumn<InterfaceStats, String> statDescrCol;
 	@FXML private TableColumn<InterfaceStats, String> statValueCol;
-	@FXML private Label fileLabel;
-	@FXML private Button saveButton;
-	@FXML private Label promptLabel;
-	@FXML private Button exitButton;
 
 
 	/**
-	 * readFile
+	 * This method will take a String representing a file name, and attempt to open it.<br>
+	 * If the file can be opened, every line that contains uncommented text will be read into an ArrayList.<br>
+	 * That ArrayList of lines will be returned to the calling method.<br>
+	 * If the file cannot be opened, this method will return an empty ArrayList.<br>
 	 * Created by Adam Howell on 2016-05-04.
-	 * This method will take a String representing a file name, and attempt to open it.
-	 * If the file can be opened, every line within that file will be read into an ArrayList.
-	 * That ArrayList of lines will be returned to the calling method.
-	 * If the file cannot be opened, this method will return 'null'.
 	 *
-	 * @param inFileName a String representing a file to open.
-	 * @return an ArrayList containing every line from the opened file.
+	 * @param inFileName A String representing a file to open.
+	 * @return An ArrayList containing every line from the opened file.
 	 */
 	private static List<String> readFile( String inFileName )
 	{
@@ -140,15 +197,14 @@ public class Controller
 
 
 	/**
-	 * findInterfaces
-	 * Created by Adam Howell on 2016-05-05.
-	 * This will create two ArrayLists, one from each walk, and add every line that begins with a specific OID.
+	 * This will create two ArrayLists, one from each walk, and add every line that begins with a specific OID.<br>
 	 * If those ArrayLists are identical, then it will find the IF_INDEX and ifDescr for each interface,
-	 * create a SnmpInterface class object from them, and return an ArrayList of those objects.
+	 * create a SnmpInterface class object from them, and return an ArrayList of those objects.<br>
+	 * Created by Adam Howell on 2016-05-05.
 	 *
-	 * @param walk1 the first WALK to search through.
-	 * @param walk2 the second WALK to search through.
-	 * @return an ObservableList of discovered indexes and descriptions.
+	 * @param walk1 The first WALK to search through.
+	 * @param walk2 The second WALK to search through.
+	 * @return An ObservableList of discovered indexes and descriptions.
 	 */
 	private static ObservableList<SnmpInterface> findInterfaces( List<String> walk1, List<String> walk2 )
 	{
@@ -194,13 +250,12 @@ public class Controller
 
 
 	/**
-	 * calculateStatistics
+	 * This will analyze two data containers and produce human-readable output related to the differences between those containers.<br>
 	 * Created by Adam Howell on 2016-05-10.
-	 * This will analyze two data containers and produce human-readable output related to the differences between those containers.
 	 *
-	 * @param walk1 the output from buildCompleteSNMPInterface for the first WALK.
-	 * @param walk2 the output from buildCompleteSNMPInterface for the second WALK.
-	 * @return an ObservableList containing all of the statistics for interface.
+	 * @param walk1 The output from buildCompleteSNMPInterface for the first WALK.
+	 * @param walk2 The output from buildCompleteSNMPInterface for the second WALK.
+	 * @return An ObservableList containing all of the statistics for interface.
 	 */
 	@SuppressWarnings( "squid:S3776" )
 	private static ObservableList<InterfaceStats> calculateStatistics( SnmpInterface walk1, SnmpInterface walk2 )
@@ -236,22 +291,22 @@ public class Controller
 		}
 
 		// Get the inOctet delta.
-		Long inOctetDelta = walk2.getIfInOctets() - walk1.getIfInOctets();
+		long inOctetDelta = walk2.getIfInOctets() - walk1.getIfInOctets();
 		// If a 'counter wrap' occurred.
 		if( inOctetDelta < 0 )
 		{
 			inOctetDelta += COUNTER32MAX;
-			errorLogger.log( Level.INFO,"Inbound octet count rolled." );
+			errorLogger.log( Level.INFO, "Inbound octet count rolled." );
 		}
 		statsAL.add( new InterfaceStats( "Inbound Octet Delta", nfUs.format( inOctetDelta ) ) );
 
 		// Get the outOctet delta.
-		Long outOctetDelta = walk2.getIfOutOctets() - walk1.getIfOutOctets();
+		long outOctetDelta = walk2.getIfOutOctets() - walk1.getIfOutOctets();
 		// If a 'counter wrap' occurred.
 		if( outOctetDelta < 0 )
 		{
 			outOctetDelta += COUNTER32MAX;
-			errorLogger.log( Level.INFO,"Outbound octet count rolled." );
+			errorLogger.log( Level.INFO, "Outbound octet count rolled." );
 		}
 		statsAL.add( new InterfaceStats( "Outbound Octet Delta", nfUs.format( outOctetDelta ) ) );
 		Long totalOctetDelta = inOctetDelta + outOctetDelta;
@@ -263,17 +318,17 @@ public class Controller
 			// Calculate the inUtilization.
 			Double inUtilization = ( double )( inOctetDelta * 8 * 100 ) / ( ( ( double )( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Add the inbound utilization formatted to 3 decimal places.
-			statsAL.add( new InterfaceStats( "Inbound Utilization", String.format("%.3g", inUtilization) ) );
+			statsAL.add( new InterfaceStats( "Inbound Utilization", String.format( "%.3g", inUtilization ) ) );
 
 			// Calculate the outUtilization.
 			Double outUtilization = ( double )( outOctetDelta * 8 * 100 ) / ( ( ( double )( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() );
 			// Add the outbound utilization formatted to 3 decimal places.
-			statsAL.add( new InterfaceStats( "Outbound Utilization", String.format("%.3g", outUtilization) ) );
+			statsAL.add( new InterfaceStats( "Outbound Utilization", String.format( "%.3g", outUtilization ) ) );
 
 			// Calculate the totalUtilization.
 			Double totalUtilization = ( ( ( totalOctetDelta ) * 8 * 100 ) / ( ( ( double )( walk2.getSysUpTime() - walk1.getSysUpTime() ) / 100 ) * walk1.getIfSpeed() ) / 2 );
 			// Add the total utilization formatted to 3 decimal places.
-			statsAL.add( new InterfaceStats( "Total Utilization", String.format("%.3g", totalUtilization) ) );
+			statsAL.add( new InterfaceStats( "Total Utilization", String.format( "%.3g", totalUtilization ) ) );
 		}
 		else
 		{
@@ -292,22 +347,22 @@ public class Controller
 		}
 
 		// Calculate inbound discard delta.
-		Long inDiscardDelta = walk2.getIfInDiscards() - walk1.getIfInDiscards();
+		long inDiscardDelta = walk2.getIfInDiscards() - walk1.getIfInDiscards();
 		// If a 'counter wrap' occurred.
 		if( inDiscardDelta < 0 )
 		{
 			inDiscardDelta += COUNTER32MAX;
-			errorLogger.log( Level.INFO,"Inbound discards rolled." );
+			errorLogger.log( Level.INFO, "Inbound discards rolled." );
 		}
 		statsAL.add( new InterfaceStats( "Inbound Discards", nfUs.format( inDiscardDelta ) ) );
 
 		// Calculate outbound discard delta.
-		Long outDiscardDelta = walk2.getIfOutDiscards() - walk1.getIfOutDiscards();
+		long outDiscardDelta = walk2.getIfOutDiscards() - walk1.getIfOutDiscards();
 		// If a 'counter wrap' occurred.
 		if( outDiscardDelta < 0 )
 		{
 			outDiscardDelta += COUNTER32MAX;
-			errorLogger.log( Level.INFO,"Outbound discards rolled." );
+			errorLogger.log( Level.INFO, "Outbound discards rolled." );
 		}
 		statsAL.add( new InterfaceStats( "Outbound Discards", nfUs.format( outDiscardDelta ) ) );
 
@@ -316,22 +371,22 @@ public class Controller
 		statsAL.add( new InterfaceStats( "Total Discards", nfUs.format( totalDiscardDelta ) ) );
 
 		// Calculate inbound error delta.
-		Long inErrorDelta = walk2.getIfInErrors() - walk1.getIfInErrors();
+		long inErrorDelta = walk2.getIfInErrors() - walk1.getIfInErrors();
 		// If a 'counter wrap' occurred.
 		if( inErrorDelta < 0 )
 		{
 			inErrorDelta += COUNTER32MAX;
-			errorLogger.log( Level.INFO,"Inbound errors rolled." );
+			errorLogger.log( Level.INFO, "Inbound errors rolled." );
 		}
 		statsAL.add( new InterfaceStats( "Inbound Errors", nfUs.format( inErrorDelta ) ) );
 
 		// Calculate outbound error delta.
-		Long outErrorDelta = walk2.getIfOutErrors() - walk1.getIfOutErrors();
+		long outErrorDelta = walk2.getIfOutErrors() - walk1.getIfOutErrors();
 		// If a 'counter wrap' occurred.
 		if( outErrorDelta < 0 )
 		{
 			outErrorDelta += COUNTER32MAX;
-			errorLogger.log( Level.INFO,"Outbound errors rolled." );
+			errorLogger.log( Level.INFO, "Outbound errors rolled." );
 		}
 		statsAL.add( new InterfaceStats( "Outbound Errors", nfUs.format( outErrorDelta ) ) );
 
@@ -344,14 +399,13 @@ public class Controller
 
 
 	/**
-	 * buildCompleteSNMPInterface
+	 * This method will find all pertinent stats for a single SNMP Interface, and return an object containing that data.<br>
+	 * The returned object will also contain the System UpTime from that WALK.<br>
 	 * Created by Adam Howell on 2016-05-10.
-	 * This method will find all pertinent stats for a single SNMP Interface, and return an object containing that data.
-	 * The returned object will also contain the System UpTime from that WALK.
 	 *
-	 * @param walk    an ArrayList containing every line from a SNMP WALK file.
-	 * @param ifIndex the SNMP Interface Index to build.
-	 * @return a SnmpInterface class object that represents the details for the requested interface.
+	 * @param walk    An ArrayList containing every line from a SNMP WALK file.
+	 * @param ifIndex The SNMP Interface Index to build.
+	 * @return A SnmpInterface class object that represents the details for the requested interface.
 	 */
 	@SuppressWarnings( { "squid:S106", "squid:S3776" } )
 	private static SnmpInterface buildCompleteSNMPInterface( List<String> walk, Long ifIndex )
@@ -372,82 +426,58 @@ public class Controller
 			{
 				// The sysUptime value will start at offset 32 and go to the end of the line.
 				tempSysUpTime = Long.parseLong( line.substring( 32 ) );
-				if( DEBUG )
-				{
-					System.out.println( "Found a sysUpTime of " + tempSysUpTime );
-				}
+				errorLogger.log( Level.FINE, "Found a sysUpTime of {0}", tempSysUpTime );
 			}
 			else if( line.startsWith( IF_DESCRIPTION_OID + ifIndex ) )
 			{
 				// The interface description is in quotes, will start after 'STRING:', and go to the end of the line.
 				tempIfDescr = line.substring( line.indexOf( " = " ) + 12, line.length() - 1 );
-				if( DEBUG )
-				{
-					System.out.println( "Found a ifDescr of " + tempIfDescr );
-				}
+				System.out.println( "Found a ifDescr of " + tempIfDescr );
+				errorLogger.log( Level.FINE, "Found a ifDescr of {0}", tempIfDescr );
 			}
 			else if( line.startsWith( IF_SPEED_OID + ifIndex ) )
 			{
 				// The interface speed value will start after 'GAUGE32:', and go to the end of the line.
 				tempIfSpeed = Long.parseLong( line.substring( line.indexOf( " = " ) + 12 ) );
-				if( DEBUG )
-				{
-					System.out.println( "Found a ifSpeed of " + tempIfSpeed );
-				}
+				System.out.println( "Found a ifSpeed of " + tempIfSpeed );
+				errorLogger.log( Level.FINE, "Found a ifSpeed of {0}", tempIfSpeed );
 			}
 			else if( line.startsWith( IF_IN_OCTETS_OID + ifIndex ) )
 			{
 				// The interface inbound octet count value will start after 'COUNTER32:', and go to the end of the line.
 				tempIfInOctets = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
-				if( DEBUG )
-				{
-					System.out.println( "Found a ifInOctets of " + tempIfInOctets );
-				}
+				errorLogger.log( Level.FINE, "Found a ifInOctets of {0}", tempIfInOctets );
 			}
 			else if( line.startsWith( IF_IN_DISCARDS_OID + ifIndex ) )
 			{
 				// The interface inbound discard count value will start after 'COUNTER32:', and go to the end of the line.
 				tempIfInDiscards = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
-				if( DEBUG )
-				{
-					System.out.println( "Found a ifInDiscards of " + tempIfInDiscards );
-				}
+				System.out.println( "Found a ifInDiscards of " + tempIfInDiscards );
+				errorLogger.log( Level.FINE, "Found a ifInDiscards of {0}", tempIfInDiscards );
 			}
 			else if( line.startsWith( IF_IN_ERRORS_OID + ifIndex ) )
 			{
 				// The interface inbound error count value will start after 'COUNTER32:', and go to the end of the line.
 				tempIfInErrors = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
-				if( DEBUG )
-				{
-					System.out.println( "Found a ifInErrors of " + tempIfInErrors );
-				}
+				errorLogger.log( Level.FINE, "Found a ifInErrors of {0}", tempIfInErrors );
 			}
 			else if( line.startsWith( IF_OUT_OCTETS_OID + ifIndex ) )
 			{
 				// The interface outbound octet count value will start after 'COUNTER32:', and go to the end of the line.
 				tempIfOutOctets = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
-				if( DEBUG )
-				{
-					System.out.println( "Found a ifOutOctets of " + tempIfOutOctets );
-				}
+				errorLogger.log( Level.FINE, "Found a ifOutOctets of {0}", tempIfOutOctets );
 			}
 			else if( line.startsWith( IF_OUT_DISCARDS_OID + ifIndex ) )
 			{
 				// The interface outbound discard count value will start after 'COUNTER32:', and go to the end of the line.
 				tempIfOutDiscards = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
-				if( DEBUG )
-				{
-					System.out.println( "Found a ifOutDiscards of " + tempIfOutDiscards );
-				}
+				errorLogger.log( Level.FINE, "Found a ifOutDiscards of {0}", tempIfOutDiscards );
 			}
 			else if( line.startsWith( IF_OUT_ERRORS_OID + ifIndex ) )
 			{
 				// The interface outbound error count value will start after 'COUNTER32:', and go to the end of the line.
 				tempIfOutErrors = Long.parseLong( line.substring( line.indexOf( " = " ) + 14 ) );
-				if( DEBUG )
-				{
-					System.out.println( "Found a ifOutErrors of " + tempIfOutErrors );
-				}
+				errorLogger.log( Level.FINE, "Found a ifOutErrors of {0}", tempIfOutErrors );
 			}
 		}
 		return new SnmpInterface( ifIndex, tempIfDescr, tempSysUpTime, tempIfSpeed, tempIfInOctets, tempIfInDiscards,
@@ -456,7 +486,6 @@ public class Controller
 
 
 	/**
-	 * openButtonHandler
 	 * This method will create a handler for the open file buttons.
 	 *
 	 * @param title the title to put at the top of the FileChooser dialog window.
@@ -488,10 +517,9 @@ public class Controller
 
 
 	/**
-	 * saveButtonHandler
 	 * This method will create a handler for the save file button.
 	 *
-	 * @param calculatedUtilization the object that we want to save.
+	 * @param calculatedUtilization The object that we want to save.
 	 */
 	@FXML private void saveButtonHandler( ObservableList<InterfaceStats> calculatedUtilization )
 	{
@@ -585,10 +613,7 @@ public class Controller
 						                                      else
 						                                      {
 							                                      errorLogger.log( Level.SEVERE, "Invalid data, time stamps on the two WALK files are identical!" );
-							                                      if( DEBUG )
-							                                      {
-								                                      errorLogger.log( Level.SEVERE, "This happened in the statisticTableView event handler." );
-							                                      }
+							                                      errorLogger.log( Level.SEVERE, "This happened in the statisticTableView event handler." );
 							                                      calculatedUtilization.addAll( new InterfaceStats( "Unable to calculate utilization", "The time stamps on the two files are identical" ) );
 						                                      }
 						                                      // Assign each column to a class data member.
@@ -639,7 +664,6 @@ public class Controller
 
 
 	/**
-	 * invalidButtonAlert
 	 * This method will display an error dialog pop-up indicating that the button is not yet ready to use.
 	 */
 	@FXML private void invalidButtonAlert()

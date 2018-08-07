@@ -2,22 +2,29 @@ package com.adamjhowell.snmpinterface.model;
 
 
 /**
- * Created by Adam Howell on 2016-05-25.
- * This class is meant to hold data that is fed to a JavaFX TableView object (statisticTableView).
- * The "description" class member will go into column 1, named "Description".
+ * This class is meant to hold data that is fed to a JavaFX TableView object (statisticTableView).<br>
+ * The "description" class member will go into column 1, named "Description".<br>
  * The "value" class member will go into column 2, named "Value".
+ * <p>
+ * Created by Adam Howell on 2016-05-25.
  */
 public class InterfaceStats
 {
+	/**
+	 * Essentially a key in a Map object.
+	 */
 	private String description;
+	/**
+	 * Essentially a value in a Map object.
+	 */
 	private String value;
 
 
 	/**
-	 * InterfaceStats parameterized constructor.
+	 * Parameterized constructor.
 	 *
-	 * @param description a description of the value.
-	 * @param value       the value/stat to display.
+	 * @param description A description of the value.
+	 * @param value       The value/stat to display.
 	 */
 	public InterfaceStats( String description, String value )
 	{
@@ -29,7 +36,7 @@ public class InterfaceStats
 	/**
 	 * Since this class is used as an adapter, getters are required to operate properly.
 	 *
-	 * @return the text description to display.
+	 * @return The text description to display.
 	 */
 	@SuppressWarnings( "unused" )
 	public String getDescription()
@@ -41,7 +48,7 @@ public class InterfaceStats
 	/**
 	 * Since this class is used as an adapter, getters are required to operate properly.
 	 *
-	 * @return the text value to display.
+	 * @return The text value to display.
 	 */
 	@SuppressWarnings( "unused" )
 	public String getValue()
@@ -51,9 +58,7 @@ public class InterfaceStats
 
 
 	/**
-	 * I wanted a cleaner toString().
-	 *
-	 * @return a string representing the object.
+	 * @return A string representing the object.
 	 */
 	@Override
 	public String toString()
