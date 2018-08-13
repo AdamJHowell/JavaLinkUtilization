@@ -4,7 +4,6 @@ This program has the ability to analyze two SNMP walk files, show all available 
 
 
 ToDo:
-- Switch to a true FXML layout.
 - Port to Android.
 - Simplify the Controller.BuildCompleteSNMPInterface() method.
 
@@ -29,6 +28,7 @@ Done:
 - Added SLF4J logging for most errors and some informational.
 - Switched from JSON Simple to Gson.
 - Eliminated the "Unchecked generics array creation for varargs parameter" warning by switching from one .setAll() to two .add() lines.
+- Switch to a true FXML layout.
 
 
 Commit history:

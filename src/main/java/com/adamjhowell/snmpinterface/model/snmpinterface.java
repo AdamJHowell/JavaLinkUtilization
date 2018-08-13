@@ -2,16 +2,17 @@ package com.adamjhowell.snmpinterface.model;
 
 
 /**
- * Created by Adam Howell on 2016-05-05.
- * This class is a structure meant to represent all of the stats pertinent to a SNMP interface or link.
- * A SNMP interface is essentially a NIC (Network Interface Card) or network adapter.
- * It may be a wired ethernet port, an 802.11 radio, a bluetooth adapter, a USB network device, or similar hardware.
- * It may also be a virtual (software) network adapter.
+ * This class is a structure meant to represent all of the stats pertinent to this implementation of a SNMP interface or link.<br>
+ * A SNMP interface is essentially a NIC (Network Interface Card) or network adapter.<br>
+ * It may be a wired ethernet port, an 802.11 radio, a bluetooth adapter, a USB network device, virtual device, etc.<br>
+ * There are other attributes to an interface that are not implemented in this program.
  * <p>
- * This class is used to transport data around within this program.
- * This class (short constructor) is also used to format data for display in a JavaFX TableView object (interfaceTableView).
- * The ifIndex class member will go into column 1, named "Index".
+ * This class is used to transport data within this program.<br>
+ * This class (short constructor) is also used to format data for display in a JavaFX TableView object (interfaceTableView).<br>
+ * The ifIndex class member will go into column 1, named "Index".<br>
  * The ifDescr class member will go into column 2, named "Description".
+ * <p>
+ * Created by Adam Howell on 2016-05-05.
  */
 public class SnmpInterface
 {
@@ -30,16 +31,16 @@ public class SnmpInterface
 	/**
 	 * This constructor populates all class member variables with data that will be used to calculate pertinent statistics.
 	 *
-	 * @param ifIndex       the interface index number from the SNMP walk.
-	 * @param ifDescr       the interface description from the SNMP walk.
-	 * @param sysUpTime     the system uptime from the SNMP walk.
-	 * @param ifSpeed       the interface speed from the SNMP walk.
-	 * @param ifInOctets    the interface inbound octet count from the SNMP walk.
-	 * @param ifInDiscards  the interface inbound discard count from the SNMP walk.
-	 * @param ifInErrors    the interface inbound error count from the SNMP walk.
-	 * @param ifOutOctets   the interface outbound octet count from the SNMP walk.
-	 * @param ifOutDiscards the interface outbound discard count from the SNMP walk.
-	 * @param ifOutErrors   the interface outbound error count from the SNMP walk.
+	 * @param ifIndex       The interface index number from the SNMP walk.
+	 * @param ifDescr       The interface description from the SNMP walk.
+	 * @param sysUpTime     The system uptime from the SNMP walk.
+	 * @param ifSpeed       The interface speed from the SNMP walk.
+	 * @param ifInOctets    The interface inbound octet count from the SNMP walk.
+	 * @param ifInDiscards  The interface inbound discard count from the SNMP walk.
+	 * @param ifInErrors    The interface inbound error count from the SNMP walk.
+	 * @param ifOutOctets   The interface outbound octet count from the SNMP walk.
+	 * @param ifOutDiscards The interface outbound discard count from the SNMP walk.
+	 * @param ifOutErrors   The interface outbound error count from the SNMP walk.
 	 */
 	@SuppressWarnings( "squid:S00107" )
 	public SnmpInterface( Long ifIndex, String ifDescr, Long sysUpTime, Long ifSpeed, Long ifInOctets, Long ifInDiscards, Long ifInErrors, Long ifOutOctets, Long ifOutDiscards, Long ifOutErrors )
@@ -60,8 +61,8 @@ public class SnmpInterface
 	/**
 	 * This constructor is used to populate the "interfaceTableView" JavaFX object.
 	 *
-	 * @param ifIndex the interface index number from the SNMP walk.
-	 * @param ifDescr the interface description from the SNMP walk.
+	 * @param ifIndex The interface index number from the SNMP walk.
+	 * @param ifDescr The interface description from the SNMP walk.
 	 */
 	public SnmpInterface( Long ifIndex, String ifDescr )
 	{
@@ -77,7 +78,7 @@ public class SnmpInterface
 
 
 	/**
-	 * getIfDescr is required for the PropertyValueFactory to function.
+	 * getIfDescr is required for the PropertyValueFactory to function.<br>
 	 * If you delete this, you are going to have a bad time.
 	 *
 	 * @return the interface description.
@@ -138,9 +139,7 @@ public class SnmpInterface
 
 
 	/**
-	 * A clearer toString() than the default.
-	 *
-	 * @return a string representing the minimum required elements.
+	 * @return A string representing the minimum required elements.
 	 */
 	@Override
 	public String toString()
