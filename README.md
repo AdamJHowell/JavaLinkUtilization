@@ -135,3 +135,5 @@ I want to switch from JSON-simple to GSON, since it supports generics
 This fixed the generics warning that I was getting earlier with JSON Simple.
 
 35 - Eliminated the "Unchecked generics array creation for varargs parameter" warning.
+
+[![CodeFactor](https://www.codefactor.io/repository/github/adamjhowell/javalinkutilization/badge)](https://www.codefactor.io/repository/github/adamjhowell/javalinkutilization)
